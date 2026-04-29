@@ -1,8 +1,4 @@
 <p align="center">
-  <img src=".github/assets/banner.png" alt="VoxFlow Banner" width="100%">
-</p>
-
-<p align="center">
   <img src=".github/assets/logo.png" alt="VoxFlow Logo" width="120">
 </p>
 
