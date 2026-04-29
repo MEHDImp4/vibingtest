@@ -1,0 +1,8 @@
+node_modules/
+out/
+dist/
+.env
+*.env
+src/native/__pycache__/
+src/native/*.pyc
+src/native/venv/
