@@ -10,10 +10,19 @@
 </p>
 
 <p align="center">
+  <a href="https://mehdimp4.github.io/vibingtest/"><strong>Project Website</strong></a> &bull;
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <a href="https://github.com/MEHDImp4/vibingtest/releases"><img src="https://img.shields.io/github/v/release/MEHDImp4/vibingtest?include_prereleases" alt="Release"></a>
   <a href=".github/workflows/ci-cd.yml"><img src="https://img.shields.io/github/actions/workflow/status/MEHDImp4/vibingtest/ci-cd.yml?branch=main" alt="Build Status"></a>
 </p>
+
+---
+
+## 📖 About
+
+**VoxFlow** is a productivity-first voice interface designed to bridge the gap between spoken thought and written text. Unlike traditional dictation tools that often require manual cleanup, VoxFlow leverages the power of modern Large Language Models (LLMs) to understand your intent, fix grammar, remove filler words, and even translate your speech in real-time—all while integrating seamlessly into your existing Windows workflow.
+
+Whether you're writing emails, coding, or chatting, VoxFlow turns your voice into a high-fidelity input device that works in every text field on your system.
 
 ---
 
@@ -59,6 +68,17 @@
    ```bash
    npm run dev
    ```
+
+## 🔑 Getting API Keys
+
+VoxFlow supports several AI providers. You will need an API key from at least one of them to use the cloud-based features:
+
+- **OpenAI**: Get your key from the [OpenAI Dashboard](https://platform.openai.com/api-keys) (used for Whisper and GPT models).
+- **Anthropic**: Get your key from the [Anthropic Console](https://console.anthropic.com/) (used for Claude models).
+- **NVIDIA NIM**: Get your key from the [NVIDIA API Catalog](https://build.nvidia.com/) (used for high-performance Llama models).
+- **Deepgram**: Get your key from the [Deepgram Console](https://console.deepgram.com/) (alternative ASR provider).
+
+*Alternatively, you can run VoxFlow in **Local-Only Mode** using Ollama and Local Whisper without any API keys.*
 
 ## 🛠️ Architecture
 

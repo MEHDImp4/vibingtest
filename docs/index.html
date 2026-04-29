@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoxFlow | System-wide AI Voice Input for Windows</title>
+    <meta name="description" content="Hold a key, speak, and watch your voice transform into perfect text in any Windows application. Powered by modern LLMs.">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1110;
+            --surface: #1a1c1b;
+            --primary: #34d399;
+            --primary-glow: rgba(52, 211, 153, 0.2);
+            --text: #f5f5f4;
+            --text-dim: #a8a29e;
+            --accent: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient Background */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.08), transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(245, 158, 11, 0.05), transparent 40%);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header {
+            padding: 2rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-wrap img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo-wrap span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        nav a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 2rem;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        /* Hero */
+        .hero {
+            padding: 8rem 0 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -0.04em;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to bottom, #fff, #a8a29e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-radius: 99px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #064e3b;
+            box-shadow: 0 20px 40px -10px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: #6ee7b7;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Preview */
+        .preview-img {
+            margin-top: 6rem;
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--surface);
+            overflow: hidden;
+            box-shadow: 0 40px 100px -20px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .preview-img img {
+            width: 100%;
+            display: block;
+        }
+
+        /* Features */
+        .features {
+            padding: 10rem 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            padding: 2.5rem;
+            border-radius: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary-glow);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        .icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            background: var(--primary-glow);
+            color: var(--primary);
+            border-radius: 12px;
+            font-size: 1.5rem;
+        }
+
+        /* Architecture */
+        .architecture {
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .architecture h2 {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .arch-item {
+            padding: 2rem;
+            border-radius: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(12, 12, 11, 0.5);
+        }
+
+        .arch-item code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 6rem 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        footer p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero { padding: 4rem 0 2rem; }
+            header nav { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <div class="container">
+        <header>
+            <a href="#" class="logo-wrap">
+                <img src="assets/logo.png" alt="VoxFlow">
+                <span>VoxFlow</span>
+            </a>
+            <nav>
+                <a href="#features">Features</a>
+                <a href="#setup">Setup</a>
+                <a href="https://github.com/MEHDImp4/vibingtest">GitHub</a>
+            </nav>
+        </header>
+
+        <section class="hero">
+            <h1>Dictate with Intent.</h1>
+            <p>System-wide AI voice input for Windows. Hold a key, speak, and watch your voice transform into perfect text in any application.</p>
+            <div class="cta-group">
+                <a href="https://github.com/MEHDImp4/vibingtest/releases" class="btn btn-primary">Download for Windows</a>
+                <a href="https://github.com/MEHDImp4/vibingtest" class="btn btn-secondary">View Source</a>
+            </div>
+
+            <div class="preview-img">
+                <img src="assets/banner.png" alt="VoxFlow Interface">
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="feature-card">
+                <div class="icon">✨</div>
+                <h3>Hold-to-Talk</h3>
+                <p>Global dictation trigger. Press and hold your preferred hotkey (default CapsLock) to start recording instantly.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🤖</div>
+                <h3>AI Refinement</h3>
+                <p>Beyond transcription. VoxFlow uses LLMs to clean up grammar, remove filler words, and polish your speech.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🌍</div>
+                <h3>Smart Translation</h3>
+                <p>Speak in your native tongue and have it instantly translated and typed in any target language.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🛡️</div>
+                <h3>Privacy First</h3>
+                <p>Switch to Local-Only mode to process everything on your machine using Ollama and Local Whisper.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">⚡</div>
+                <h3>Auto-Paste</h3>
+                <p>Zero friction. Once processed, the final text is automatically typed into your active window.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🎛️</div>
+                <h3>Per-App Profiles</h3>
+                <p>Customize behavior for specific apps. Different rewrite styles for Slack vs. VS Code.</p>
+            </div>
+        </section>
+
+        <section id="setup" class="architecture">
+            <h2>Under the Hood</h2>
+            <div class="arch-grid">
+                <div class="arch-item">
+                    <code>UI Layer</code>
+                    <p>Electron & React</p>
+                </div>
+                <div class="arch-item">
+                    <code>Native Core</code>
+                    <p>Python Helper</p>
+                </div>
+                <div class="arch-item">
+                    <code>AI Engine</code>
+                    <p>OpenAI / Anthropic / NVIDIA</p>
+                </div>
+                <div class="arch-item">
+                    <code>Local Mode</code>
+                    <p>Ollama & Whisper</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="container">
+                <p>&copy; 2026 VoxFlow. Built with ❤️ for the Windows community.</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
