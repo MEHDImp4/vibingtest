@@ -206,6 +206,7 @@ export interface VoxflowApi {
   testMicrophone: () => Promise<{ ok: boolean }>
   testPaste: () => Promise<{ ok: boolean }>
   confirmPaste: () => Promise<{ ok: boolean }>
+  checkForUpdates: () => Promise<void>
   on: (channel: RendererEventChannel, cb: (...args: unknown[]) => void) => () => void
   getWindowType: () => string
 }
@@ -240,7 +241,8 @@ export const IPC = {
   // Feature expansion
   TEST_MICROPHONE: 'test:microphone',
   TEST_PASTE: 'test:paste',
-  PASTE_CONFIRM: 'paste:confirm'
+  PASTE_CONFIRM: 'paste:confirm',
+  CHECK_FOR_UPDATES: 'update:check'
 } as const
 
 // ─── Native helper messages ───────────────────────────────────────────────────

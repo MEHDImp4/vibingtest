@@ -12,6 +12,7 @@ import { NativeBridge } from './native-bridge'
 import { loadSettings } from './settings-store'
 import { addEntry } from './history-store'
 import { isLocalWhisperAvailable, isOllamaAvailable, rewriteTranscriptStep, transcribeAudioStep } from './ai-pipeline'
+import { setupUpdater } from './updater'
 import { AppSettings, IPC, LastAudioSnapshot, PipelineDiagnostics, PipelineMetadata, RecordingState, RecordingMode, StepError } from '@shared/types'
 import { randomUUID } from 'crypto'
 import fs from 'fs'
@@ -408,6 +409,7 @@ app.whenReady().then(() => {
   if (process.platform === 'win32') app.setAppUserModelId(process.execPath)
 
   const settings = loadSettings()
+  setupUpdater()
 
   registerIpcHandlers(
     (newSettings) => bridge.updateHotkeys(newSettings),
@@ -447,6 +449,12 @@ app.whenReady().then(() => {
     }
     return { ok: false, error: 'No pending paste' }
   })
+  
+  ipcMain.handle(IPC.CHECK_FOR_UPDATES, async () => {
+    const { manualCheckForUpdates } = await import('./updater')
+    return manualCheckForUpdates()
+  })
+  
   createOverlayWindow()
 
   if (!settings.startMinimized || !app.isPackaged) createSettingsWindow()

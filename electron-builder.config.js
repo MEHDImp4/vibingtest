@@ -13,5 +13,10 @@ module.exports = {
   },
   extraResources: [
     { from: 'src/native', to: 'native', filter: ['**/*.py', 'requirements.txt'] }
-  ]
+  ],
+  publish: {
+    provider: 'github',
+    owner: 'MEHDImp4',
+    repo: 'vibingtest'
+  }
 }

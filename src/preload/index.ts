@@ -35,6 +35,7 @@ const api: VoxflowApi = {
   testMicrophone: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.TEST_MICROPHONE),
   testPaste: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.TEST_PASTE),
   confirmPaste: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.PASTE_CONFIRM),
+  checkForUpdates: (): Promise<void> => ipcRenderer.invoke(IPC.CHECK_FOR_UPDATES),
 
   // Events from main
   on: (channel: RendererEventChannel, cb: (...args: unknown[]) => void) => {

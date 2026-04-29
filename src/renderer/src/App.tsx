@@ -380,7 +380,12 @@ function SettingsPage(): JSX.Element {
         eyebrow="Configuration"
         title="Local controls for capture, models, and paste behavior."
         description="Provider credentials stay in the Electron user data directory. Keep the renderer as a control surface, not a provider client."
-        action={<button className="primary-button" onClick={save}>{saved ? 'Saved' : 'Save settings'}</button>}
+        action={
+          <div className="flex gap-2">
+            <button className="secondary-button" onClick={() => window.voxflow.checkForUpdates()}>Check for updates</button>
+            <button className="primary-button" onClick={save}>{saved ? 'Saved' : 'Save settings'}</button>
+          </div>
+        }
       />
 
       {error && <InlineError message={error} />}
