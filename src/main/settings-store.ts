@@ -21,7 +21,7 @@ export function saveSettings(settings: AppSettings): void {
 }
 
 function normalizeSettings(settings: AppSettings): AppSettings {
-  const oldSettings = settings as Record<string, unknown>
+  const oldSettings = settings as unknown as Record<string, unknown>
   const normalized: AppSettings = {
     ...settings,
     appProfiles: Array.isArray(settings.appProfiles) ? settings.appProfiles : DEFAULT_SETTINGS.appProfiles,
@@ -51,7 +51,7 @@ function normalizeSettings(settings: AppSettings): AppSettings {
   }
 
   normalized.appProfiles = normalized.appProfiles.map((profile) => {
-    const oldProfile = profile as Record<string, unknown>
+    const oldProfile = profile as unknown as Record<string, unknown>
     const p = {
       ...profile,
       localLlmModel: profile.localLlmModel?.trim() || normalized.localLlmModel,

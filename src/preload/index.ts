@@ -49,7 +49,7 @@ const api: VoxflowApi = {
   // Window type query
   getWindowType: () => {
     try {
-      const search = window.location.search
+      const search = (globalThis as unknown as { location?: { search: string } }).location?.search
       if (!search) return 'main'
       const params = new URLSearchParams(search)
       return params.get('window') ?? 'main'
