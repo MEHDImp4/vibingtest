@@ -25,7 +25,8 @@ export function createOverlayWindow(): BrowserWindow {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false
-    }
+    },
+    icon: path.join(__dirname, '../../resources/icon.png')
   })
 
   overlayWindow.setIgnoreMouseEvents(false)
@@ -62,7 +63,8 @@ export function createSettingsWindow(): BrowserWindow {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false
-    }
+    },
+    icon: path.join(__dirname, '../../resources/icon.png')
   })
 
   if (!appIsPackaged() && process.env['ELECTRON_RENDERER_URL']) {
