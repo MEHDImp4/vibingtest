@@ -4,9 +4,25 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'ARCHITECTURE.md'
+      - '.github/**'
+      - '.vscode/**'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'ARCHITECTURE.md'
+      - '.github/**'
+      - '.vscode/**'
   workflow_dispatch:
 
 permissions:

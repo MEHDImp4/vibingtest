@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { VoxflowApi } from '../../shared/types'
 
 declare global {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import logo from './assets/logo.png'
 import type { CSSProperties, ReactNode } from 'react'
 import { AppProfile, AppSettings, DEFAULT_SETTINGS, IPC, PipelineDiagnostics, RecordingState, TranscriptionEntry, WordStats } from '../../shared/types'
 import { Dashboard } from './pages/Dashboard'
@@ -49,7 +50,9 @@ function MainApp(): JSX.Element {
         <aside className="drag app-sidebar flex min-h-[100dvh] flex-col px-4 py-4 max-md:min-h-0 max-md:border-b max-md:border-r-0">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="brand-mark">VF</div>
+              <div className="brand-mark overflow-hidden">
+                <img src={logo} alt="VoxFlow" className="w-full h-full object-contain p-1.5" />
+              </div>
               <div className="mt-4 text-[1.35rem] font-semibold leading-none tracking-tight">VoxFlow</div>
               <div className="mt-2 max-w-[12rem] text-xs leading-5 text-stone-500">A compact voice console for dictation, translation, and paste-ready text.</div>
             </div>
@@ -212,6 +215,7 @@ function OverlayApp(): JSX.Element {
       <div className="overlay-shell w-full">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-4">
+            <img src={logo} alt="" className="h-5 w-5 shrink-0 object-contain opacity-60" />
             <div className={`record-orb ${state}`} />
             <div className="min-w-0">
               <div className="text-sm font-semibold text-stone-50">
