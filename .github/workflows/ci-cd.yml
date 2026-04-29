@@ -54,22 +54,28 @@ jobs:
         run: npm run lint
 
       # Bump patch version using the build number to produce a unique semver
-      # e.g. 1.0.0 → 1.0.<run_number>  (1.0.14, 1.0.15, …)
+      # e.g. 1.0.0 → 1.1.<run_number>
       - name: Set release version
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: version
         shell: powershell
         run: |
           $pkg = Get-Content package.json | ConvertFrom-Json
-          $base = ($pkg.version -split '\.')[ 0..1 ] -join '.'
-          $newVersion = "$base.${{ github.run_number }}"
+          $newVersion = "1.1.${{ github.run_number }}"
           $content = Get-Content package.json -Raw
           $updated = $content -replace '"version"\s*:\s*"[^"]*"', ('"version": "' + $newVersion + '"')
           Set-Content package.json $updated
           echo "RELEASE_VERSION=$newVersion" >> $env:GITHUB_OUTPUT
 
+      - name: Create Git Tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v${{ steps.version.outputs.RELEASE_VERSION }}
+          git push origin v${{ steps.version.outputs.RELEASE_VERSION }}
+
       # electron-builder builds AND publishes to GitHub with all required files
-      # (latest.yml, .blockmap, .exe) — needs --publish always flag
       - name: Build and Publish
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npm run release
@@ -89,3 +95,4 @@ jobs:
           path: |
             dist/*.exe
             dist/latest.yml
+            dist/*.blockmap
