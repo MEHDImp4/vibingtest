@@ -5,7 +5,7 @@ import log from 'electron-log'
 export function setupUpdater(): void {
   // Configure logging for updates
   autoUpdater.logger = log
-  // @ts-ignore logger is not typed correctly in older electron-log or updater
+  // @ts-expect-error logger is not typed correctly in older electron-log or updater
   autoUpdater.logger.transports.file.level = 'info'
 
   autoUpdater.on('checking-for-update', () => {
