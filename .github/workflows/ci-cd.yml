@@ -57,16 +57,16 @@ jobs:
       # e.g. 1.0.0 → 1.0.<run_number>  (1.0.14, 1.0.15, …)
       - name: Set release version
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: version
         shell: powershell
         run: |
           $pkg = Get-Content package.json | ConvertFrom-Json
-          $base = $pkg.version -replace '\.\d+$', ''       # "1.0"
-          $newVersion = "$base.${{ github.run_number }}"   # "1.0.14"
-          (Get-Content package.json -Raw) -replace '"version": "[^"]*"', `
-            '"version": "' + $newVersion + '"' |
-            Set-Content package.json
+          $base = ($pkg.version -split '\.')[ 0..1 ] -join '.'
+          $newVersion = "$base.${{ github.run_number }}"
+          $content = Get-Content package.json -Raw
+          $updated = $content -replace '"version"\s*:\s*"[^"]*"', ('"version": "' + $newVersion + '"')
+          Set-Content package.json $updated
           echo "RELEASE_VERSION=$newVersion" >> $env:GITHUB_OUTPUT
-        id: version
 
       # electron-builder publishes the release AND uploads latest.yml + .blockmap
       - name: Build and Publish
