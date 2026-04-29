@@ -1,6 +1,14 @@
 import { app, BrowserWindow, screen } from 'electron'
 import path from 'path'
 
+// In production the icon lives outside the asar at process.resourcesPath.
+// In development it lives in the source tree under resources/.
+function appIconPath(): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.png')
+    : path.join(__dirname, '../../resources/icon.png')
+}
+
 let overlayWindow: BrowserWindow | null = null
 let settingsWindow: BrowserWindow | null = null
 
@@ -26,7 +34,7 @@ export function createOverlayWindow(): BrowserWindow {
       contextIsolation: true,
       nodeIntegration: false
     },
-    icon: path.join(__dirname, '../../resources/icon.png')
+    icon: appIconPath()
   })
 
   overlayWindow.setIgnoreMouseEvents(false)
@@ -64,7 +72,7 @@ export function createSettingsWindow(): BrowserWindow {
       contextIsolation: true,
       nodeIntegration: false
     },
-    icon: path.join(__dirname, '../../resources/icon.png')
+    icon: appIconPath()
   })
 
   if (!appIsPackaged() && process.env['ELECTRON_RENDERER_URL']) {

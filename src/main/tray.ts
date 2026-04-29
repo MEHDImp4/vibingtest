@@ -1,6 +1,13 @@
-import { Tray, Menu, nativeImage } from 'electron'
+import { Tray, Menu, nativeImage, app } from 'electron'
+import path from 'path'
 
 let tray: Tray | null = null
+
+function iconPath(): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.png')
+    : path.join(__dirname, '../../resources/icon.png')
+}
 
 export function createTray(
   onOpenSettings: () => void,
@@ -37,8 +44,31 @@ export function destroyTray(): void {
 }
 
 function createTrayIcon(active: boolean): Electron.NativeImage {
+  try {
+    // Load the real app logo and resize to tray size
+    const img = nativeImage.createFromPath(iconPath())
+    if (!img.isEmpty()) {
+      const resized = img.resize({ width: 16, height: 16 })
+      resized.setTemplateImage(false)
+
+      if (!active) return resized
+
+      // When recording: overlay a small red badge using an SVG dot
+      const badge = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+        <circle cx="13" cy="3" r="3.5" fill="#ef4444"/>
+      </svg>`
+      const badgeUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(badge)}`
+      // Return the base icon; the tooltip already signals state
+      // (nativeImage compositing not available without native addon)
+      return resized
+    }
+  } catch {
+    // fall through to SVG fallback
+  }
+
+  // SVG fallback (dev without resources/ folder built yet)
   const fill = active ? '#d8e2c8' : '#f5f5f0'
-  const ring = active ? '#8fa37c' : '#8f8d84'
+  const ring = active ? '#ef4444' : '#8f8d84'
   const svg = [
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">',
     '<rect width="32" height="32" rx="8" fill="#10100e"/>',
