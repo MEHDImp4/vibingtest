@@ -5,11 +5,13 @@ module.exports = {
   files: ['out/**/*', 'src/native/**/*'],
   win: {
     target: 'nsis',
-    icon: 'resources/icon.png'
+    icon: 'resources/icon.png',
+    artifactName: '${productName}-Setup-${version}.${ext}'
   },
   nsis: {
     oneClick: false,
-    allowToChangeInstallationDirectory: true
+    allowToChangeInstallationDirectory: true,
+    artifactName: '${productName}-Setup-${version}.${ext}'
   },
   extraResources: [
     { from: 'src/native', to: 'native', filter: ['**/*.py', 'requirements.txt'] },

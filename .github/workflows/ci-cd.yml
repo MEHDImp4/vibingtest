@@ -82,6 +82,28 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Ensure release update assets are uploaded
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: powershell
+        run: |
+          $tag = "v${{ steps.version.outputs.RELEASE_VERSION }}"
+          $assets = @(
+            "dist/latest.yml",
+            (Get-ChildItem dist -Filter "*.exe" | Select-Object -First 1).FullName,
+            (Get-ChildItem dist -Filter "*.blockmap" | Select-Object -First 1).FullName
+          )
+
+          foreach ($asset in $assets) {
+            if (-not $asset -or -not (Test-Path $asset)) {
+              throw "Missing release asset: $asset"
+            }
+          }
+
+          gh release upload $tag $assets --clobber
+          gh release view $tag --json assets --jq '.assets[].name'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # On PRs / other branches — just build, don't publish
       - name: Build only (no publish)
         if: github.event_name != 'push' || github.ref != 'refs/heads/main'
