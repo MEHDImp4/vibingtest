@@ -37,7 +37,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Essential for generating changelogs
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -51,32 +51,40 @@ jobs:
       - name: Run Linting
         run: npm run lint
 
-      - name: Build Application
+      # Bump patch version using the build number to produce a unique semver
+      # e.g. 1.0.0 → 1.0.<run_number>  (1.0.14, 1.0.15, …)
+      - name: Set release version
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: powershell
+        run: |
+          $pkg = Get-Content package.json | ConvertFrom-Json
+          $base = $pkg.version -replace '\.\d+$', ''       # "1.0"
+          $newVersion = "$base.${{ github.run_number }}"   # "1.0.14"
+          (Get-Content package.json -Raw) -replace '"version": "[^"]*"', `
+            '"version": "' + $newVersion + '"' |
+            Set-Content package.json
+          echo "RELEASE_VERSION=$newVersion" >> $env:GITHUB_OUTPUT
+        id: version
+
+      # electron-builder publishes the release AND uploads latest.yml + .blockmap
+      - name: Build and Publish
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npm run package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Tell electron-builder to publish always (creates the GitHub release)
+          EP_DRAFT: false
+
+      # On PRs / other branches — just build, don't publish
+      - name: Build only (no publish)
+        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+        run: npm run build
 
       - name: Upload Build Artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: VoxFlow-Windows-Build
-          path: dist/*.exe
-
-      - name: Extract version from package.json
-        id: package_version
-        shell: powershell
-        run: |
-          $version = (Get-Content package.json | ConvertFrom-Json).version
-          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
-
-      - name: Create Release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.package_version.outputs.VERSION }}-b${{ github.run_number }}
-          name: Release v${{ steps.package_version.outputs.VERSION }} (Build ${{ github.run_number }})
-          generate_release_notes: true
-          files: |
+          path: |
             dist/*.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            dist/latest.yml

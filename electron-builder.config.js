@@ -17,6 +17,7 @@ module.exports = {
   publish: {
     provider: 'github',
     owner: 'MEHDImp4',
-    repo: 'vibingtest'
+    repo: 'vibingtest',
+    releaseType: 'release'
   }
 }
