@@ -8,6 +8,7 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "package": "electron-vite build && electron-builder",
+    "test": "npm run lint",
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
