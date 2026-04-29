@@ -22,7 +22,7 @@ export function createOverlayWindow(): BrowserWindow {
     focusable: false,
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/index.mjs'),
+      preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -59,7 +59,7 @@ export function createSettingsWindow(): BrowserWindow {
     backgroundColor: '#10100e',
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/index.mjs'),
+      preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
