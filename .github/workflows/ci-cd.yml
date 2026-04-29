@@ -68,14 +68,13 @@ jobs:
           Set-Content package.json $updated
           echo "RELEASE_VERSION=$newVersion" >> $env:GITHUB_OUTPUT
 
-      # electron-builder publishes the release AND uploads latest.yml + .blockmap
+      # electron-builder builds AND publishes to GitHub with all required files
+      # (latest.yml, .blockmap, .exe) — needs --publish always flag
       - name: Build and Publish
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npm run package
+        run: npm run release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Tell electron-builder to publish always (creates the GitHub release)
-          EP_DRAFT: false
 
       # On PRs / other branches — just build, don't publish
       - name: Build only (no publish)
