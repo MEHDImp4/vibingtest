@@ -10,6 +10,7 @@ on:
       - 'CONTRIBUTING.md'
       - 'SECURITY.md'
       - 'ARCHITECTURE.md'
+      - 'docs/**'
       - '.github/**'
       - '.vscode/**'
   pull_request:
@@ -21,6 +22,7 @@ on:
       - 'CONTRIBUTING.md'
       - 'SECURITY.md'
       - 'ARCHITECTURE.md'
+      - 'docs/**'
       - '.github/**'
       - '.vscode/**'
   workflow_dispatch:
