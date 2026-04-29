@@ -1,9 +1,16 @@
 import updater from 'electron-updater'
 const { autoUpdater } = updater
-import { dialog } from 'electron'
+import { dialog, app } from 'electron'
 import log from 'electron-log'
 
+let isManualCheck = false
+
 export function setupUpdater(): void {
+  if (!app.isPackaged) {
+    console.log('[updater] Skipping setup in development')
+    return
+  }
+
   // Configure logging for updates
   autoUpdater.logger = log
   // @ts-expect-error logger is not typed correctly in older electron-log or updater
@@ -15,14 +22,34 @@ export function setupUpdater(): void {
 
   autoUpdater.on('update-available', (info) => {
     console.log('[updater] Update available:', info.version)
+    if (isManualCheck) {
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Update Available',
+        message: `A new version (${info.version}) is available. It will be downloaded in the background.`
+      })
+      isManualCheck = false
+    }
   })
 
   autoUpdater.on('update-not-available', (info) => {
     console.log('[updater] Update not available:', info.version)
+    if (isManualCheck) {
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'No Updates',
+        message: `VoxFlow is up to date (Version ${info.version}).`
+      })
+      isManualCheck = false
+    }
   })
 
   autoUpdater.on('error', (err) => {
     console.error('[updater] Error in auto-updater:', err)
+    if (isManualCheck) {
+      dialog.showErrorBox('Update Error', err.message || 'An error occurred while checking for updates.')
+      isManualCheck = false
+    }
   })
 
   autoUpdater.on('download-progress', (progressObj) => {
@@ -45,15 +72,25 @@ export function setupUpdater(): void {
     })
   })
 
+  // Initial check
+  autoUpdater.checkForUpdatesAndNotify()
+
   // Check for updates every 2 hours
   setInterval(() => {
     autoUpdater.checkForUpdatesAndNotify()
   }, 1000 * 60 * 60 * 2)
-
-  // Initial check
-  autoUpdater.checkForUpdatesAndNotify()
 }
 
 export async function manualCheckForUpdates(): Promise<void> {
+  if (!app.isPackaged) {
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Development Mode',
+      message: 'Update checks are disabled in development mode.'
+    })
+    return
+  }
+
+  isManualCheck = true
   await autoUpdater.checkForUpdatesAndNotify()
 }
