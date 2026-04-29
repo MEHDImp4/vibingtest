@@ -1,4 +1,4 @@
-import { app, clipboard } from 'electron'
+import { app, clipboard, ipcMain } from 'electron'
 import { createTray, setTrayRecording, destroyTray } from './tray'
 import {
   createOverlayWindow,
@@ -417,7 +417,7 @@ app.whenReady().then(() => {
     getDiagnostics
   )
 
-  const { ipcMain } = require('electron')
+  // Registered handlers already in registerIpcHandlers above
 
   ipcMain.handle(IPC.TEST_PASTE, async () => {
     const text = 'VoxFlow Test Paste\nSuccessful injection.'
