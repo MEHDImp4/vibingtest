@@ -1,3 +1,7 @@
+/**
+ * VoxFlow Main Entry Point
+ * Last Build Trigger: 2026-04-30
+ */
 import { app, clipboard, ipcMain } from 'electron'
 import { createTray, setTrayRecording, destroyTray } from './tray'
 import {
