@@ -46,10 +46,12 @@ export function setupUpdater(): void {
 
   autoUpdater.on('error', (err) => {
     console.error('[updater] Error in auto-updater:', err)
+    // Only show error dialog if the user manually triggered the check
     if (isManualCheck) {
       dialog.showErrorBox('Update Error', err.message || 'An error occurred while checking for updates.')
-      isManualCheck = false
     }
+    // Always reset manual check flag on error
+    isManualCheck = false
   })
 
   autoUpdater.on('download-progress', (progressObj) => {

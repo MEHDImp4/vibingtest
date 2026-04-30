@@ -82,24 +82,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Ensure release update assets are uploaded
+      - name: Verify Release Assets
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: powershell
         run: |
           $tag = "v${{ steps.version.outputs.RELEASE_VERSION }}"
-          $assets = @(
-            "dist/latest.yml",
-            (Get-ChildItem dist -Filter "*.exe" | Select-Object -First 1).FullName,
-            (Get-ChildItem dist -Filter "*.blockmap" | Select-Object -First 1).FullName
-          )
-
-          foreach ($asset in $assets) {
-            if (-not $asset -or -not (Test-Path $asset)) {
-              throw "Missing release asset: $asset"
-            }
-          }
-
-          gh release upload $tag $assets --clobber
+          Write-Host "Verifying assets for $tag..."
+          
+          # Check local files first
+          if (-not (Test-Path "dist/latest.yml")) { throw "latest.yml missing from dist/" }
+          if (-not (Get-ChildItem dist -Filter "*.exe")) { throw "Executable missing from dist/" }
+          if (-not (Get-ChildItem dist -Filter "*.blockmap")) { throw "Blockmap missing from dist/" }
+          
+          # Use gh to verify the release assets on GitHub
           gh release view $tag --json assets --jq '.assets[].name'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
