@@ -45,8 +45,8 @@ function MainApp(): JSX.Element {
   }
 
   return (
-    <div className="relative grid min-h-[100dvh] grid-cols-[256px_minmax(0,1fr)] max-md:grid-cols-1 bg-[var(--bg-primary)]">
-      <aside className="drag app-sidebar flex min-h-[100dvh] flex-col px-4 py-6 max-md:min-h-0 max-md:border-b max-md:border-r-0">
+    <div className="relative grid h-[100dvh] grid-cols-[256px_minmax(0,1fr)] max-md:grid-cols-1 bg-[var(--bg-primary)] overflow-hidden">
+      <aside className="drag app-sidebar flex h-full flex-col px-4 py-6 max-md:h-auto max-md:border-b max-md:border-r-0">
         <div className="flex items-start justify-between gap-3 px-2">
           <div>
             <div className="brand-mark w-10 h-10 panel-base flex items-center justify-center overflow-hidden">
