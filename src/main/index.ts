@@ -2,7 +2,7 @@
  * VoxFlow Main Entry Point
  * Last Build Trigger: 2026-04-30
  */
-import { app, clipboard, ipcMain } from 'electron'
+import { app, clipboard, ipcMain, BrowserWindow } from 'electron'
 import { createTray, setTrayRecording, destroyTray } from './tray'
 import {
   createOverlayWindow,
@@ -358,7 +358,7 @@ async function getDiagnostics(): Promise<Record<string, unknown>> {
   }
 
   const [localWhisperAvailable, localParakeetAvailable, ollamaAvailable] = await Promise.all([
-    isLocalWhisperAvailable(),
+    isLocalWhisperAvailable(settings.localAsrModel),
     isLocalParakeetAvailable(),
     isOllamaAvailable(settings)
   ])
@@ -555,6 +555,7 @@ app.whenReady().then(() => {
         break
       case 'log':
         console.log(`[native:${event.level ?? 'info'}]`, event.message)
+        broadcastToAll(IPC.NATIVE_LOG, { level: event.level ?? 'info', message: event.message })
         break
     }
   })

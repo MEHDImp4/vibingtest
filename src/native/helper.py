@@ -222,7 +222,11 @@ class Helper:
         name = key_name(key)
         if not name:
             return
-        self.pressed.add(name)
+        
+        if name not in self.pressed:
+            self.pressed.add(name)
+            # Only log in debug/verbose mode if we had one, but for now let's log to help the user
+            # JsonOut.log(f"key pressed: {name}", "debug")
 
         if self.active_mode:
             return
@@ -233,33 +237,27 @@ class Helper:
         current = frozenset(self.pressed)
 
         if dictate and dictate.issubset(current):
+            JsonOut.log(f"hotkey matched: dictate ({self.config.dictate})")
             self._start_recording("dictate")
         elif translate and translate.issubset(current):
+            JsonOut.log(f"hotkey matched: translate ({self.config.translate})")
             self._start_recording("translate")
         elif undo and undo.issubset(current):
-            # Undo is a discrete trigger, not a hold-mode
+            JsonOut.log(f"hotkey matched: undo ({self.config.undo})")
             JsonOut.emit({"event": "hotkey_undo"})
-            # To prevent repeated triggers, we clear pressed or wait for release
-            # but issubset check is safe as long as we only emit on the transition
-            # which pynput mostly handles via repeated calls.
-            # We'll rely on Electron handling debouncing if needed.
 
     def _on_release(self, key) -> None:
         name = key_name(key)
         if not name:
             return
 
-        stopped = False
         if self.active_mode:
             active_set = normalize_hotkey(self.config.dictate if self.active_mode == "dictate" else self.config.translate)
             if name in active_set:
+                JsonOut.log(f"hotkey released: {name}, stopping recording")
                 self._stop_recording()
-                stopped = True
 
-        if stopped:
-            self.pressed.clear()
-        else:
-            self.pressed.discard(name)
+        self.pressed.discard(name)
 
     def _start_recording(self, mode: str) -> None:
         try:

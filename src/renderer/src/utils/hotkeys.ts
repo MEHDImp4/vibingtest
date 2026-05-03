@@ -1,6 +1,4 @@
 export function normalizeKeyName(key: string): string {
-  if (key.length === 1) return key.toLowerCase()
-
   const aliases: Record<string, string> = {
     ' ': 'space',
     Spacebar: 'space',
@@ -17,7 +15,10 @@ export function normalizeKeyName(key: string): string {
     ArrowRight: 'right'
   }
 
-  return aliases[key] ?? key.toLowerCase()
+  if (aliases[key]) return aliases[key]
+  if (key.length === 1) return key.toLowerCase()
+
+  return key.toLowerCase()
 }
 
 export function normalizeHotkey(value: string): string {

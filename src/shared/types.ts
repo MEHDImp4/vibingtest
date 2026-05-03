@@ -63,6 +63,7 @@ export interface AppSettings {
   commandMode: boolean
   developerMode: boolean
   onboardingCompleted: boolean
+  keepLastAudio: boolean
   appProfiles: AppProfile[]
 }
 
@@ -189,6 +190,7 @@ export type RendererEventChannel =
   | typeof IPC.TRANSCRIPTION_ERROR
   | typeof IPC.LAST_AUDIO_UPDATED
   | typeof IPC.NATIVE_STATUS
+  | typeof IPC.NATIVE_LOG
 
 export interface VoxflowApi {
   getSettings: () => Promise<AppSettings>
@@ -225,6 +227,7 @@ export const IPC = {
   TRANSCRIPTION_ERROR: 'transcription:error',
   LAST_AUDIO_UPDATED: 'audio:last:updated',
   NATIVE_STATUS: 'native:status',
+  NATIVE_LOG: 'native:log',
 
   // Renderer → Main (invoke)
   SETTINGS_GET: 'settings:get',

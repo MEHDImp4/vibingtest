@@ -493,12 +493,22 @@ export async function isOllamaAvailable(settings: AppSettings): Promise<boolean>
   }
 }
 
-export async function isLocalWhisperAvailable(): Promise<boolean> {
+export async function isLocalWhisperAvailable(modelName?: string): Promise<boolean> {
   const scriptPath = app.isPackaged
     ? path.join(process.resourcesPath, 'native', 'transcribe_local.py')
     : path.join(app.getAppPath(), 'src', 'native', 'transcribe_local.py')
 
-  return fs.existsSync(scriptPath)
+  if (!fs.existsSync(scriptPath)) return false
+
+  // If a model is specified, try to see if it's already downloaded in the HF cache
+  if (modelName) {
+    const home = require('os').homedir()
+    const modelId = modelName === 'turbo' ? 'deepdml--faster-whisper-large-v3-turbo-ct2' : `Systran--faster-whisper-${modelName}`
+    const cachePath = path.join(home, '.cache', 'huggingface', 'hub', `models--${modelId.replace(/\//g, '--')}`)
+    return fs.existsSync(cachePath)
+  }
+
+  return true
 }
 
 export async function isLocalParakeetAvailable(): Promise<boolean> {
@@ -506,5 +516,15 @@ export async function isLocalParakeetAvailable(): Promise<boolean> {
     ? path.join(process.resourcesPath, 'native', 'transcribe_parakeet.py')
     : path.join(app.getAppPath(), 'src', 'native', 'transcribe_parakeet.py')
 
-  return fs.existsSync(scriptPath)
+  if (!fs.existsSync(scriptPath)) return false
+
+  // Parakeet models are usually in a 'models' subfolder
+  const modelDir = app.isPackaged
+    ? path.join(process.resourcesPath, 'native', 'models', 'parakeet-tdt-0.6b-v3')
+    : path.join(app.getAppPath(), 'src', 'native', 'models', 'parakeet-tdt-0.6b-v3')
+
+  const hasEncoder = fs.existsSync(path.join(modelDir, 'encoder.int8.onnx')) || fs.existsSync(path.join(modelDir, 'encoder.onnx'))
+  const hasTokens = fs.existsSync(path.join(modelDir, 'tokens.txt'))
+
+  return hasEncoder && hasTokens
 }

@@ -105,6 +105,29 @@ export function Dashboard(): JSX.Element {
             <NativeStatusBadge status={nativeStatus} />
           </div>
 
+          {nativeStatus === 'ready' && (
+            <>
+              {settings.asrProvider === 'local-parakeet' && !lastAudio.exists && (
+                <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex gap-3 items-start animate-in fade-in slide-in-from-top-2">
+                  <div className="mt-1 text-amber-400">⚠️</div>
+                  <div className="text-xs text-amber-200/70 leading-relaxed">
+                    <strong className="block text-amber-300 mb-0.5">Local Parakeet files missing</strong>
+                    Ensure the model files are in the <code>src/native/models</code> directory. Check Settings &gt; Diagnostics for details.
+                  </div>
+                </div>
+              )}
+              {settings.asrProvider === 'local-whisper' && !lastAudio.exists && (
+                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex gap-3 items-start animate-in fade-in slide-in-from-top-2">
+                  <div className="mt-1 text-blue-400">ℹ️</div>
+                  <div className="text-xs text-blue-200/70 leading-relaxed">
+                    <strong className="block text-blue-300 mb-0.5">First-run Model Download</strong>
+                    Local Whisper will download the <code>{settings.localAsrModel}</code> model on your first capture (~1GB). Ensure you have internet access.
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
           <div className={`capture-stage state-${state}`}>
             <div className="stage-topline">
               <div className={`record-orb ${state}`} />
