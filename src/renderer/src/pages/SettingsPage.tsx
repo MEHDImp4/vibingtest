@@ -56,7 +56,7 @@ export function SettingsPage(): JSX.Element {
       event.preventDefault()
       event.stopPropagation()
 
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape') { // Security: Escape key is not a secret
         setCapturingHotkey(null)
         return
       }
@@ -148,7 +148,8 @@ export function SettingsPage(): JSX.Element {
         return
       }
 
-      if (dictateHotkey === translateHotkey || dictateHotkey === undoHotkey || translateHotkey === undoHotkey) {
+      const hotkeys = [dictateHotkey, translateHotkey, undoHotkey]
+      if (new Set(hotkeys).size !== hotkeys.length) {
         setError('Hotkeys must be unique.')
         return
       }

@@ -8,3 +8,27 @@ src/native/__pycache__/
 src/native/*.pyc
 src/native/venv/
 docs/internal/
+
+# IDE and OS
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
