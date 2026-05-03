@@ -2,7 +2,7 @@ module.exports = {
   appId: 'com.voxflow.app',
   productName: 'VoxFlow',
   directories: { output: 'dist' },
-  files: ['out/**/*', 'src/native/**/*'],
+  files: ['out/**/*'],
   win: {
     target: 'nsis',
     icon: 'resources/icon.png',

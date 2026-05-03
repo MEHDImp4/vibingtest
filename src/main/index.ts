@@ -15,7 +15,7 @@ import { registerIpcHandlers } from './ipc'
 import { NativeBridge } from './native-bridge'
 import { loadSettings } from './settings-store'
 import { addEntry } from './history-store'
-import { isLocalWhisperAvailable, isOllamaAvailable, rewriteTranscriptStep, transcribeAudioStep } from './ai-pipeline'
+import { isLocalWhisperAvailable, isLocalParakeetAvailable, isOllamaAvailable, rewriteTranscriptStep, transcribeAudioStep } from './ai-pipeline'
 import { setupUpdater, manualCheckForUpdates } from './updater'
 import { AppSettings, IPC, LastAudioSnapshot, PipelineDiagnostics, PipelineMetadata, RecordingState, RecordingMode, StepError } from '@shared/types'
 import { randomUUID } from 'crypto'
@@ -357,8 +357,9 @@ async function getDiagnostics(): Promise<Record<string, unknown>> {
     localLlm: settings.llmProvider === 'local-llm' || settings.offlineFallback
   }
 
-  const [localWhisperAvailable, ollamaAvailable] = await Promise.all([
+  const [localWhisperAvailable, localParakeetAvailable, ollamaAvailable] = await Promise.all([
     isLocalWhisperAvailable(),
+    isLocalParakeetAvailable(),
     isOllamaAvailable(settings)
   ])
 
@@ -370,6 +371,7 @@ async function getDiagnostics(): Promise<Record<string, unknown>> {
         microphoneRecordingStatus: currentState,
         python: error ? 'Unavailable' : (stdout || stderr).trim(),
         localWhisperAvailable,
+        localParakeetAvailable,
         ollamaAvailable,
         selectedAsrProvider: settings.asrProvider,
         selectedLlmProvider: settings.llmProvider,
@@ -454,6 +456,11 @@ app.whenReady().then(() => {
   ipcMain.handle(IPC.CHECK_FOR_UPDATES, async () => {
     return manualCheckForUpdates()
   })
+
+  ipcMain.on(IPC.OPEN_DEV_TOOLS, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    win?.webContents.openDevTools({ mode: 'detach' })
+  })
   
   createOverlayWindow()
 
@@ -465,7 +472,28 @@ app.whenReady().then(() => {
   )
 
   // Start Python helper
-  bridge.start(settings)
+  bridge.start(settings);
+
+  // Perform Local Readiness Check
+  (async () => {
+    const [whisper, parakeet, ollama] = await Promise.all([
+      isLocalWhisperAvailable(),
+      isLocalParakeetAvailable(),
+      isOllamaAvailable(settings)
+    ])
+    console.log('[startup] Local Readiness Check:')
+    console.log(` - Local Whisper: ${whisper ? 'READY' : 'NOT FOUND'}`)
+    console.log(` - Local Parakeet: ${parakeet ? 'READY' : 'NOT FOUND'}`)
+    console.log(` - Ollama: ${ollama ? 'READY' : 'NOT RUNNING'}`)
+    
+    if (settings.asrProvider === 'local-parakeet' && !parakeet) {
+      console.warn('[startup] Warning: local-parakeet selected but models/script missing. Falling back to local-whisper for this session if available.')
+    }
+    
+    if (settings.llmProvider === 'local-llm' && !ollama) {
+      console.warn('[startup] Warning: local-llm selected but Ollama is not running.')
+    }
+  })()
 
   bridge.onEvent((event) => {
     switch (event.event) {

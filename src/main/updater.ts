@@ -46,9 +46,20 @@ export function setupUpdater(): void {
 
   autoUpdater.on('error', (err) => {
     console.error('[updater] Error in auto-updater:', err)
+    
     // Only show error dialog if the user manually triggered the check
     if (isManualCheck) {
-      dialog.showErrorBox('Update Error', err.message || 'An error occurred while checking for updates.')
+      const is404 = err.message?.includes('404') || err.stack?.includes('404')
+      if (is404) {
+        dialog.showMessageBox({
+          type: 'warning',
+          title: 'Update Check Failed',
+          message: 'The update metadata (latest.yml) was not found on GitHub. Ensure you have uploaded all build artifacts to your release.',
+          detail: 'URL: ' + (err.message.match(/https?:\/\/[^\s)]+/)?.[0] || 'Unknown')
+        })
+      } else {
+        dialog.showErrorBox('Update Error', err.message || 'An error occurred while checking for updates.')
+      }
     }
     // Always reset manual check flag on error
     isManualCheck = false

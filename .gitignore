@@ -1,9 +1,10 @@
 node_modules/
 out/
 dist/
-dist-verify/
+dist-*/
 .env
 *.env
 src/native/__pycache__/
 src/native/*.pyc
 src/native/venv/
+docs/internal/

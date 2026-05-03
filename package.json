@@ -1,6 +1,7 @@
 {
   "name": "voxflow",
   "version": "1.0.0",
+  "author": "MEHDImp4",
   "type": "module",
   "description": "System-wide AI voice input for Windows",
   "main": "./out/main/index.js",
@@ -8,8 +9,8 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "electron-vite build && electron-builder",
-    "release": "electron-vite build && electron-builder --publish always",
+    "package": "electron-vite build && electron-builder --config electron-builder.config.cjs",
+    "release": "electron-vite build && electron-builder --config electron-builder.config.cjs --publish always",
     "test": "npm run lint",
     "lint": "eslint src --ext .ts,.tsx"
   },

@@ -4,7 +4,7 @@ export type RecordingState = 'idle' | 'recording' | 'processing' | 'done' | 'err
 
 export type RecordingMode = 'dictate' | 'translate'
 
-export type AsrProvider = 'openai-whisper' | 'deepgram' | 'nvidia-nim' | 'local-whisper'
+export type AsrProvider = 'openai-whisper' | 'deepgram' | 'nvidia-nim' | 'local-whisper' | 'local-parakeet'
 export type LlmProvider = 'none' | 'openai' | 'anthropic' | 'nvidia-nim' | 'local-llm'
 export type RewriteStyle = 'clean' | 'formal' | 'casual' | 'minimal'
 export type PasteMode = 'copy-only' | 'auto-paste' | 'confirm'
@@ -60,8 +60,8 @@ export interface AppSettings {
   offlineFallback: boolean
   privacyMode: boolean
   disableAutoPasteInPrivacyMode: boolean
-  keepLastAudio: boolean
   commandMode: boolean
+  developerMode: boolean
   onboardingCompleted: boolean
   appProfiles: AppProfile[]
 }
@@ -79,8 +79,8 @@ export interface WordStats {
 export const DEFAULT_SETTINGS: AppSettings = {
   dictateHotkey: 'ctrl+shift+space',
   translateHotkey: 'ctrl+shift+t',
-  asrProvider: 'local-whisper',
-  llmProvider: 'none',
+  asrProvider: 'local-parakeet',
+  llmProvider: 'local-llm',
   openaiApiKey: '',
   anthropicApiKey: '',
   nvidiaApiKey: '',
@@ -93,7 +93,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showOverlay: true,
   startMinimized: false,
   llmModel: 'nvidia/llama-3.3-nemotron-super-49b-v1.5',
-  localAsrModel: 'base',
+  localAsrModel: 'turbo',
   localLlmModel: 'llama3.2:1b',
   localLlmEndpoint: 'http://127.0.0.1:11434',
   offlineFallback: true,
@@ -101,6 +101,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   disableAutoPasteInPrivacyMode: false,
   keepLastAudio: true,
   commandMode: true,
+  developerMode: false,
   onboardingCompleted: false,
   appProfiles: [
     {
@@ -209,6 +210,7 @@ export interface VoxflowApi {
   checkForUpdates: () => Promise<void>
   on: (channel: RendererEventChannel, cb: (...args: unknown[]) => void) => () => void
   getWindowType: () => string
+  openDevTools: () => void
 }
 
 // ─── IPC channel names ────────────────────────────────────────────────────────
@@ -242,7 +244,8 @@ export const IPC = {
   TEST_MICROPHONE: 'test:microphone',
   TEST_PASTE: 'test:paste',
   PASTE_CONFIRM: 'paste:confirm',
-  CHECK_FOR_UPDATES: 'update:check'
+  CHECK_FOR_UPDATES: 'update:check',
+  OPEN_DEV_TOOLS: 'window:devtools'
 } as const
 
 // ─── Native helper messages ───────────────────────────────────────────────────

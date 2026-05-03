@@ -57,7 +57,8 @@ const api: VoxflowApi = {
     } catch {
       return 'main'
     }
-  }
+  },
+  openDevTools: () => ipcRenderer.send(IPC.OPEN_DEV_TOOLS)
 }
 
 contextBridge.exposeInMainWorld('voxflow', api)

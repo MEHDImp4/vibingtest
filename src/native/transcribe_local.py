@@ -8,8 +8,8 @@ def main() -> int:
     parser.add_argument("audio_path")
     parser.add_argument("--model", default="base")
     parser.add_argument("--language", default=None)
-    parser.add_argument("--device", default="cpu", choices=["auto", "cpu", "cuda"])
-    parser.add_argument("--compute-type", default="int8")
+    parser.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda"])
+    parser.add_argument("--compute-type", default="auto", choices=["auto", "int8", "float16", "int8_float16"])
     args = parser.parse_args()
 
     try:
@@ -34,8 +34,26 @@ def main() -> int:
             or "cannot be loaded" in message
         )
 
+    device = args.device
+    compute_type = args.compute_type
+    
+    if device == "auto":
+        try:
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        except ImportError:
+            device = "cpu"
+            
+    if compute_type == "auto":
+        compute_type = "float16" if device == "cuda" else "int8"
+
     def run_transcription(device: str, compute_type: str) -> tuple[str, str]:
-        model = WhisperModel(args.model, device=device, compute_type=compute_type)
+        # Support for the new 'turbo' model which requires a specific HF repo for faster-whisper
+        model_name = args.model
+        if model_name.lower() == "turbo":
+            model_name = "deepdml/faster-whisper-large-v3-turbo-ct2"
+            
+        model = WhisperModel(model_name, device=device, compute_type=compute_type)
         segments, _info = model.transcribe(
             args.audio_path,
             language=args.language,

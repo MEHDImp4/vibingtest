@@ -63,6 +63,10 @@ async function transcribeWithProvider(
     return transcribeWithLocalWhisper(audioPath, settings)
   }
 
+  if (effectiveAsrProvider === 'local-parakeet') {
+    return transcribeWithLocalParakeet(audioPath)
+  }
+
   // Deepgram fallback (basic REST)
   if (effectiveAsrProvider === 'deepgram') {
     if (!settings.deepgramApiKey) throw new Error('Deepgram API key is not configured')
@@ -96,13 +100,29 @@ async function transcribeWithLocalWhisper(audioPath: string, settings: AppSettin
     ? path.join(process.resourcesPath, 'native', 'transcribe_local.py')
     : path.join(app.getAppPath(), 'src', 'native', 'transcribe_local.py')
 
-  const model = settings.localAsrModel?.trim() || 'base'
-  const output = await execPython(scriptPath, [audioPath, '--model', model, '--device', 'cpu', '--compute-type', 'int8'], 10 * 60 * 1000)
+  const model = settings.localAsrModel?.trim() || 'turbo'
+  const output = await execPython(scriptPath, [audioPath, '--model', model, '--device', 'auto', '--compute-type', 'auto'], 10 * 60 * 1000)
   const result = JSON.parse(output) as { ok: boolean; text?: string; error?: string; detail?: string }
 
   if (!result.ok) {
     const detail = result.detail ? ` (${result.detail})` : ''
     throw new Error(`${result.error ?? 'Local Whisper transcription failed'}${detail}`)
+  }
+
+  return result.text?.trim() ?? ''
+}
+
+async function transcribeWithLocalParakeet(audioPath: string): Promise<string> {
+  const scriptPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'native', 'transcribe_parakeet.py')
+    : path.join(app.getAppPath(), 'src', 'native', 'transcribe_parakeet.py')
+
+  const output = await execPython(scriptPath, [audioPath, '--device', 'auto'], 30_000)
+  const result = JSON.parse(output) as { ok: boolean; text?: string; error?: string; detail?: string }
+
+  if (!result.ok) {
+    const detail = result.detail ? ` (${result.detail})` : ''
+    throw new Error(`${result.error ?? 'Local Parakeet transcription failed'}${detail}`)
   }
 
   return result.text?.trim() ?? ''
@@ -260,9 +280,20 @@ export async function rewriteTranscriptStep(
   const primary = await runStep('llm', settings.llmProvider, () => rewriteWithProvider(prompt, raw, settings, settings.llmProvider), llmTimeoutMs(settings.llmProvider))
   if (primary.ok) return primary
 
-  const canFallback = settings.offlineFallback && settings.llmProvider !== 'local-llm' && await isOllamaAvailable(settings)
-  if (!canFallback) {
-    console.warn(`[pipeline:llm] ${settings.llmProvider} failed; using raw transcript: ${primary.error?.message}`)
+  // Determine potential fallback provider
+  let fallbackProvider: LlmProvider | null = null
+  if (settings.llmProvider === 'local-llm') {
+    // If local failed, try a cloud provider if configured
+    if (settings.nvidiaApiKey) fallbackProvider = 'nvidia-nim'
+    else if (settings.openaiApiKey) fallbackProvider = 'openai'
+    else if (settings.anthropicApiKey) fallbackProvider = 'anthropic'
+  } else if (settings.offlineFallback && await isOllamaAvailable(settings)) {
+    // If cloud failed, try local
+    fallbackProvider = 'local-llm'
+  }
+
+  if (!fallbackProvider) {
+    console.warn(`[pipeline:llm] ${settings.llmProvider} failed; no fallback available. Using raw transcript: ${primary.error?.message}`)
     return {
       ok: true,
       step: 'llm',
@@ -274,9 +305,9 @@ export async function rewriteTranscriptStep(
     }
   }
 
-  console.warn(`[pipeline:llm] ${settings.llmProvider} failed, falling back to local-llm: ${primary.error?.message}`)
-  const fallback = await runStep('llm', 'local-llm', () => rewriteWithLocalLlm(prompt, raw, settings), llmTimeoutMs('local-llm'))
-  if (fallback.ok) return { ...fallback, fallbackUsed: 'local-llm' }
+  console.warn(`[pipeline:llm] ${settings.llmProvider} failed, falling back to ${fallbackProvider}: ${primary.error?.message}`)
+  const fallback = await runStep('llm', fallbackProvider, () => rewriteWithProvider(prompt, raw, settings, fallbackProvider!), llmTimeoutMs(fallbackProvider))
+  if (fallback.ok) return { ...fallback, fallbackUsed: fallbackProvider }
 
   console.warn(`[pipeline:llm] local fallback failed; using raw transcript: ${fallback.error?.message}`)
   return {
@@ -466,6 +497,14 @@ export async function isLocalWhisperAvailable(): Promise<boolean> {
   const scriptPath = app.isPackaged
     ? path.join(process.resourcesPath, 'native', 'transcribe_local.py')
     : path.join(app.getAppPath(), 'src', 'native', 'transcribe_local.py')
+
+  return fs.existsSync(scriptPath)
+}
+
+export async function isLocalParakeetAvailable(): Promise<boolean> {
+  const scriptPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'native', 'transcribe_parakeet.py')
+    : path.join(app.getAppPath(), 'src', 'native', 'transcribe_parakeet.py')
 
   return fs.existsSync(scriptPath)
 }
