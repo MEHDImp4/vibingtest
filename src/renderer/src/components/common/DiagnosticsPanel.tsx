@@ -47,6 +47,7 @@ export function DiagnosticsPanel({ settings }: { settings: AppSettings }): JSX.E
         <button className="secondary-button compact" onClick={run}>{running ? 'Checking' : 'Run diagnostics'}</button>
         <button className="secondary-button compact" onClick={() => window.voxflow.testMicrophone()}>Test Mic</button>
         <button className="secondary-button compact" onClick={() => window.voxflow.testPaste()}>Test Paste</button>
+        <button className="secondary-button compact" onClick={() => window.voxflow.restartHelper()}>Restart Helper</button>
       </div>
     </div>
   )

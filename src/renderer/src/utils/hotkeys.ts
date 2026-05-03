@@ -55,9 +55,9 @@ export function normalizeHotkey(value: string): string {
 
 export function isValidHotkey(value: string): boolean {
   const parts = normalizeHotkey(value).split('+').filter(Boolean)
-  const hasModifier = parts.some((part) => ['ctrl', 'shift', 'alt', 'win'].includes(part))
+  // Allow single keys if they are not just modifiers, OR allow combo with modifiers
   const hasNonModifier = parts.some((part) => !['ctrl', 'shift', 'alt', 'win'].includes(part))
-  return hasModifier && hasNonModifier
+  return parts.length > 0 && hasNonModifier
 }
 
 export function hotkeyFromKeyboardEvent(event: globalThis.KeyboardEvent): string {
@@ -72,6 +72,6 @@ export function hotkeyFromKeyboardEvent(event: globalThis.KeyboardEvent): string
     key
   ].filter(Boolean)
 
-  if (parts.length < 2) return ''
+  if (parts.length < 1) return ''
   return parts.join('+')
 }

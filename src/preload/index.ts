@@ -36,6 +36,8 @@ const api: VoxflowApi = {
   testPaste: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.TEST_PASTE),
   confirmPaste: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.PASTE_CONFIRM),
   checkForUpdates: (): Promise<void> => ipcRenderer.invoke(IPC.CHECK_FOR_UPDATES),
+  getVersion: (): Promise<string> => ipcRenderer.invoke(IPC.APP_VERSION),
+  restartHelper: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.NATIVE_RESTART),
 
   // Events from main
   on: (channel: RendererEventChannel, cb: (...args: unknown[]) => void) => {

@@ -208,6 +208,8 @@ export interface VoxflowApi {
   testPaste: () => Promise<{ ok: boolean }>
   confirmPaste: () => Promise<{ ok: boolean }>
   checkForUpdates: () => Promise<void>
+  getVersion: () => Promise<string>
+  restartHelper: () => Promise<{ ok: boolean }>
   on: (channel: RendererEventChannel, cb: (...args: unknown[]) => void) => () => void
   getWindowType: () => string
   openDevTools: () => void
@@ -245,6 +247,8 @@ export const IPC = {
   TEST_PASTE: 'test:paste',
   PASTE_CONFIRM: 'paste:confirm',
   CHECK_FOR_UPDATES: 'update:check',
+  APP_VERSION: 'voxflow:app-version',
+  NATIVE_RESTART: 'voxflow:native-restart',
   OPEN_DEV_TOOLS: 'window:devtools'
 } as const
 

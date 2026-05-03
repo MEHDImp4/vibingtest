@@ -457,6 +457,19 @@ app.whenReady().then(() => {
     return manualCheckForUpdates()
   })
 
+  ipcMain.handle(IPC.APP_VERSION, () => {
+    return app.getVersion()
+  })
+
+  ipcMain.handle(IPC.NATIVE_RESTART, async () => {
+    console.log('[app] Restarting native helper...')
+    bridge.stop()
+    // Give it a moment to release ports/files
+    await new Promise(r => setTimeout(r, 800))
+    bridge.start(loadSettings())
+    return { ok: true }
+  })
+
   ipcMain.on(IPC.OPEN_DEV_TOOLS, (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     win?.webContents.openDevTools({ mode: 'detach' })

@@ -32,15 +32,20 @@ const LOCAL_LLM_MODELS = [
 
 export function SettingsPage(): JSX.Element {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
+  const [version, setVersion] = useState('')
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [capturingHotkey, setCapturingHotkey] = useState<keyof Pick<AppSettings, 'dictateHotkey' | 'translateHotkey' | 'undoHotkey'> | null>(null)
 
   useEffect(() => {
-    window.voxflow.getSettings()
-      .then(setSettings)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+    Promise.all([
+      window.voxflow.getSettings(),
+      window.voxflow.getVersion()
+    ]).then(([s, v]) => {
+      setSettings(s)
+      setVersion(v)
+    }).catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false))
   }, [])
 
@@ -161,7 +166,7 @@ export function SettingsPage(): JSX.Element {
   return (
     <section className="page-shell">
       <PageHeader
-        eyebrow="Settings"
+        eyebrow={`Settings • v${version}`}
         title="Voice Control & Model Configuration"
         description="Configure your hotkeys and choose between lightning-fast local models or high-accuracy cloud providers."
         action={
