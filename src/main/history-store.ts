@@ -75,7 +75,7 @@ export function clearHistory(): void {
 }
 
 function countWords(text: string): number {
-  return (text.match(/(?:[\p{L}\p{N}]+['’\-])*[\p{L}\p{N}]+/gu) ?? []).length
+  return (text.match(/(?:[\p{L}\p{N}]+['’-])*[\p{L}\p{N}]+/gu) ?? []).length
 }
 
 function startOfDay(date: Date): Date {

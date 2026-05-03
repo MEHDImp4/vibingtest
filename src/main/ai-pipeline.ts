@@ -5,6 +5,7 @@ import { AppSettings, AsrProvider, LlmProvider, RecordingMode, StepError, StepRe
 import { app } from 'electron'
 import { execFile } from 'child_process'
 import path from 'path'
+import os from 'os'
 
 // ─── Transcription ────────────────────────────────────────────────────────────
 
@@ -502,7 +503,7 @@ export async function isLocalWhisperAvailable(modelName?: string): Promise<boole
 
   // If a model is specified, try to see if it's already downloaded in the HF cache
   if (modelName) {
-    const home = require('os').homedir()
+    const home = os.homedir()
     const modelId = modelName === 'turbo' ? 'deepdml--faster-whisper-large-v3-turbo-ct2' : `Systran--faster-whisper-${modelName}`
     const cachePath = path.join(home, '.cache', 'huggingface', 'hub', `models--${modelId.replace(/\//g, '--')}`)
     return fs.existsSync(cachePath)

@@ -53,13 +53,7 @@ function createTrayIcon(active: boolean): Electron.NativeImage {
 
       if (!active) return resized
 
-      // When recording: overlay a small red badge using an SVG dot
-      const badge = `<svg xmlns="https://www.w3.org/2000/svg" width="16" height="16">
-        <circle cx="13" cy="3" r="3.5" fill="#ef4444"/>
-      </svg>`
-      const badgeUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(badge)}`
-      // Return the base icon; the tooltip already signals state
-      // (nativeImage compositing not available without native addon)
+      // When recording: Return the base icon; the tooltip already signals state
       return resized
     }
   } catch {

@@ -27,13 +27,13 @@ function normalizeSettings(settings: AppSettings): AppSettings {
     appProfiles: (settings.appProfiles || DEFAULT_SETTINGS.appProfiles).map((p) => ({
       ...DEFAULT_SETTINGS.appProfiles[0], // fallback to first default profile for shape
       ...p,
-      pasteMode: p.pasteMode ?? ((p as any).autoPaste === false ? 'copy-only' : 'auto-paste'),
+      pasteMode: p.pasteMode ?? ((p as Record<string, unknown>).autoPaste === false ? 'copy-only' : 'auto-paste'),
       llmModel: p.llmModel?.replace('-v1', '-v1.5') ?? p.llmModel
     }))
   }
 
   // Global migrations
-  normalized.pasteMode = normalized.pasteMode ?? ((settings as any).autoPaste === false ? 'copy-only' : 'auto-paste')
+  normalized.pasteMode = normalized.pasteMode ?? ((settings as Record<string, unknown>).autoPaste === false ? 'copy-only' : 'auto-paste')
   normalized.llmModel = normalized.llmModel?.replace('-v1', '-v1.5')
 
   if (normalized.privacyMode) {

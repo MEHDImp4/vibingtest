@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { AppSettings } from '../../../shared/types'
-import { formatDiagnosticError, formatDuration } from '../../utils/formatters'
+import { formatDiagnosticError } from '../../utils/formatters'
+import { useIpcOn } from '../../hooks/useIpc'
 import { StatusPill } from './StatusPill'
 import { InlineError } from './InlineError'
 
@@ -18,7 +19,7 @@ export function DiagnosticsPanel({ settings }: { settings: AppSettings }): JSX.E
     }
   }
 
-  useIpcOn(window.voxflow.IPC.NATIVE_LOG, (log: any) => {
+  useIpcOn(window.voxflow.IPC.NATIVE_LOG, (log: { level: string; message: string }) => {
     setLogs((prev) => [{ ...log, timestamp: Date.now() }, ...prev].slice(0, 50))
   })
 
