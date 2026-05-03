@@ -97,12 +97,12 @@ async function transcribeWithProvider(
 }
 
 async function transcribeWithLocalWhisper(audioPath: string, settings: AppSettings): Promise<string> {
-  const scriptPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'native', 'transcribe_local.py')
+  const nativePath = app.isPackaged
+    ? path.join(process.resourcesPath, 'native', 'voxflow-transcribe.exe')
     : path.join(app.getAppPath(), 'src', 'native', 'transcribe_local.py')
 
   const model = settings.localAsrModel?.trim() || 'turbo'
-  const output = await execPython(scriptPath, [audioPath, '--model', model, '--device', 'auto', '--compute-type', 'auto'], 10 * 60 * 1000)
+  const output = await execNative(nativePath, [audioPath, '--model', model, '--device', 'auto', '--compute-type', 'auto'], 10 * 60 * 1000)
   const result = JSON.parse(output) as { ok: boolean; text?: string; error?: string; detail?: string }
 
   if (!result.ok) {
@@ -114,11 +114,11 @@ async function transcribeWithLocalWhisper(audioPath: string, settings: AppSettin
 }
 
 async function transcribeWithLocalParakeet(audioPath: string): Promise<string> {
-  const scriptPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'native', 'transcribe_parakeet.py')
+  const nativePath = app.isPackaged
+    ? path.join(process.resourcesPath, 'native', 'voxflow-parakeet.exe')
     : path.join(app.getAppPath(), 'src', 'native', 'transcribe_parakeet.py')
 
-  const output = await execPython(scriptPath, [audioPath, '--device', 'auto'], 30_000)
+  const output = await execNative(nativePath, [audioPath, '--device', 'auto'], 30_000)
   const result = JSON.parse(output) as { ok: boolean; text?: string; error?: string; detail?: string }
 
   if (!result.ok) {
@@ -129,18 +129,20 @@ async function transcribeWithLocalParakeet(audioPath: string): Promise<string> {
   return result.text?.trim() ?? ''
 }
 
-function execPython(scriptPath: string, args: string[], timeoutMs: number): Promise<string> {
-  const pythonBin = process.platform === 'win32' ? 'python' : 'python3'
+function execNative(nativePath: string, args: string[], timeoutMs: number): Promise<string> {
+  const isExe = nativePath.endsWith('.exe')
+  const cmd = isExe ? nativePath : (process.platform === 'win32' ? 'python' : 'python3')
+  const finalArgs = isExe ? args : [nativePath, ...args]
 
   return new Promise((resolve, reject) => {
     execFile(
-      pythonBin,
-      [scriptPath, ...args],
+      cmd,
+      finalArgs,
       { timeout: timeoutMs, maxBuffer: 1024 * 1024 },
       (error, stdout, stderr) => {
         if (error) {
           const message = stderr.trim() || stdout.trim() || error.message
-          reject(new Error(`Local Whisper process failed: ${message}`))
+          reject(new Error(`Native process failed: ${message}`))
           return
         }
 
@@ -155,7 +157,9 @@ async function transcribeWithNvidiaNim(audioPath: string, settings: AppSettings)
 
   const audioData = fs.readFileSync(audioPath)
   const audioBase64 = audioData.toString('base64')
-  const res = await fetch('https://integrate.api.nvidia.com/v1/microsoft/phi-4-multimodal-instruct', {
+  const endpoint = 'https://integrate.api.nvidia.com/v1/microsoft/phi-4-multimodal-instruct'
+  
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${settings.nvidiaApiKey}`,
@@ -175,15 +179,53 @@ async function transcribeWithNvidiaNim(audioPath: string, settings: AppSettings)
     })
   })
 
-  const json = await res.json().catch(() => null) as NvidiaMultimodalResponse | null
+  let json = await res.json().catch(() => null) as NvidiaMultimodalResponse | null
+
+  // Handle asynchronous processing (202 Accepted) for long audio
+  if (res.status === 202) {
+    const requestId = (json as any)?.requestId || res.headers.get('request-id') || res.headers.get('x-request-id')
+    if (!requestId) {
+      throw new Error('NVIDIA NIM returned 202 but no requestId was found to poll.')
+    }
+
+    console.log(`[pipeline:asr] NVIDIA NIM pending (202), polling for request: ${requestId}`)
+    
+    let attempts = 0
+    const maxAttempts = 45 // Up to ~90 seconds
+    const pollInterval = 2000
+
+    while (attempts < maxAttempts) {
+      attempts++
+      await new Promise(r => setTimeout(r, pollInterval))
+      
+      const pollRes = await fetch(`https://api.nvidia.com/v1/status/${requestId}`, {
+        headers: {
+          Authorization: `Bearer ${settings.nvidiaApiKey}`,
+          Accept: 'application/json'
+        }
+      })
+
+      const pollJson = await pollRes.json().catch(() => null) as NvidiaMultimodalResponse | null
+      
+      if (pollRes.status === 200) {
+        const transcript = pollJson?.choices?.[0]?.message?.content?.trim()
+        if (transcript) return transcript
+        throw new Error('NVIDIA NIM polling returned 200 but no transcript was found in the response')
+      } 
+      
+      if (pollRes.status !== 202) {
+        const detail = pollJson?.detail ?? pollJson?.message ?? `${pollRes.status} ${pollRes.statusText}`
+        throw new Error(`NVIDIA NIM polling failed: ${detail}`)
+      }
+      
+      // Still processing, continue loop
+    }
+    throw new Error('NVIDIA NIM transcription timed out after polling for 90 seconds')
+  }
 
   if (!res.ok) {
     const detail = json?.detail ?? json?.message ?? `${res.status} ${res.statusText}`
     throw new Error(`NVIDIA NIM speech-to-text failed: ${detail}`)
-  }
-
-  if (res.status === 202) {
-    throw new Error('NVIDIA NIM returned a pending response. Long audio asset polling is not implemented in this MVP; try a shorter recording.')
   }
 
   const transcript = json?.choices?.[0]?.message?.content?.trim()

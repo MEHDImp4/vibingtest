@@ -14,14 +14,14 @@ export class NativeBridge {
   start(settings: AppSettings): void {
     if (this.proc) return
 
-    const nativePath = app.isPackaged
-      ? path.join(process.resourcesPath, 'native', 'helper.py')
+    const helperPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'native', 'voxflow-helper.exe')
       : path.join(app.getAppPath(), 'src', 'native', 'helper.py')
 
-    // Try python3 then python
     const pythonBin = process.platform === 'win32' ? 'python' : 'python3'
+    const isExe = helperPath.endsWith('.exe')
 
-    this.proc = spawn(pythonBin, [nativePath], {
+    this.proc = spawn(isExe ? helperPath : pythonBin, isExe ? [] : [helperPath], {
       env: {
         ...process.env,
         DICTATE_HOTKEY: settings.dictateHotkey,

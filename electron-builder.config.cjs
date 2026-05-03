@@ -14,7 +14,7 @@ module.exports = {
     artifactName: '${productName}-Setup-${version}.${ext}'
   },
   extraResources: [
-    { from: 'src/native', to: 'native', filter: ['**/*.py', 'requirements.txt'] },
+    { from: 'src/native/dist', to: 'native', filter: ['*.exe'] },
     { from: 'resources/icon.png', to: 'icon.png' }
   ],
   publish: {
