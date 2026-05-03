@@ -1,5 +1,3 @@
-import { normalizeHotkey } from '../../utils/hotkeys'
-
 export function HotkeyField(props: {
   label: string
   hint: string
@@ -10,26 +8,23 @@ export function HotkeyField(props: {
   onChange: (value: string) => void
 }): JSX.Element {
   return (
-    <div className="field">
-      <span>{props.label}</span>
-      <div className={`hotkey-control ${props.isCapturing ? 'is-capturing' : ''}`}>
-        <code>{props.isCapturing ? 'Press a key combo' : props.value}</code>
+    <div className="space-y-2">
+      <div className="flex flex-col gap-1">
+        <label className="label-mono text-[10px] opacity-60">{props.label}</label>
+        <p className="text-[10px] text-[var(--text-tertiary)] leading-snug">{props.hint}</p>
+      </div>
+      <div className={`flex items-center justify-between gap-4 p-3 panel-base bg-[var(--bg-primary)] ${props.isCapturing ? 'border-[var(--border-active)]' : ''}`}>
+        <code className="label-mono text-[11px] text-[var(--text-primary)] truncate">
+          {props.isCapturing ? 'RECORDING COMBO...' : props.value}
+        </code>
         <button
           type="button"
-          className="secondary-button compact"
+          className="secondary-button compact text-[10px]"
           onClick={props.isCapturing ? props.onCaptureCancel : props.onCaptureStart}
-          autoFocus={props.isCapturing}
         >
-          {props.isCapturing ? 'Cancel' : 'Capture'}
+          {props.isCapturing ? 'CANCEL' : 'CHANGE'}
         </button>
       </div>
-      <input
-        value={props.value}
-        onChange={(event) => props.onChange(event.target.value)}
-        onBlur={(event) => props.onChange(normalizeHotkey(event.target.value))}
-        placeholder="ctrl+shift+space"
-      />
-      <small>{props.hint}</small>
     </div>
   )
 }

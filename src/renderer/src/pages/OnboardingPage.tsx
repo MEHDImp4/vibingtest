@@ -34,22 +34,22 @@ export function OnboardingPage(props: { settings: AppSettings; onComplete: (sett
   }
 
   return (
-    <section className="page-shell">
+    <section className="p-8 animate-reveal">
       <PageHeader
-        eyebrow="First run"
-        title="Set up capture before your first dictation."
-        description="Walk through hotkeys, microphone readiness, providers, paste behavior, and private local-only mode."
-        action={<button className="primary-button" onClick={finish}>{saving ? 'Saving' : 'Finish setup'}</button>}
+        eyebrow="Welcome"
+        title="Get started"
+        description="Set up your capture environment. You can choose between lightning-fast local models or high-accuracy cloud providers."
+        action={<button className="primary-button" onClick={finish}>{saving ? 'SAVING...' : 'FINISH SETUP'}</button>}
       />
       {error && <InlineError message={error} />}
-      <div className="settings-grid">
-        <Panel title="Hotkeys" description="Choose the two shortcuts the Python helper registers globally.">
-          <Field label="Dictation hotkey"><input value={settings.dictateHotkey} onChange={(e) => update('dictateHotkey', e.target.value)} /></Field>
-          <Field label="Translation hotkey"><input value={settings.translateHotkey} onChange={(e) => update('translateHotkey', e.target.value)} /></Field>
+      <div className="grid grid-cols-2 gap-6 max-xl:grid-cols-1">
+        <Panel title="Hotkeys" description="Choose the two shortcuts the helper registers globally.">
+          <Field label="Dictation hotkey"><input className="input-field" value={settings.dictateHotkey} onChange={(e) => update('dictateHotkey', e.target.value)} /></Field>
+          <Field label="Translation hotkey"><input className="input-field" value={settings.translateHotkey} onChange={(e) => update('translateHotkey', e.target.value)} /></Field>
         </Panel>
-        <Panel title="Local or Cloud" description="Local mode keeps speech and rewrite on this machine. Cloud mode uses configured provider keys.">
+        <Panel title="Local or Cloud" description="Local mode keeps speech on this machine. Cloud mode uses your own API keys.">
           <Field label="ASR provider">
-            <select value={settings.asrProvider} onChange={(e) => update('asrProvider', e.target.value as AppSettings['asrProvider'])}>
+            <select className="input-field" value={settings.asrProvider} onChange={(e) => update('asrProvider', e.target.value as AppSettings['asrProvider'])}>
               <option value="local-whisper">Local Whisper</option>
               <option value="openai-whisper">OpenAI Whisper</option>
               <option value="deepgram">Deepgram</option>
@@ -57,7 +57,7 @@ export function OnboardingPage(props: { settings: AppSettings; onComplete: (sett
             </select>
           </Field>
           <Field label="LLM provider">
-            <select value={settings.llmProvider} onChange={(e) => update('llmProvider', e.target.value as AppSettings['llmProvider'])}>
+            <select className="input-field" value={settings.llmProvider} onChange={(e) => update('llmProvider', e.target.value as AppSettings['llmProvider'])}>
               <option value="none">None, paste raw transcript</option>
               <option value="local-llm">Local Ollama</option>
               <option value="openai">OpenAI</option>
@@ -66,19 +66,19 @@ export function OnboardingPage(props: { settings: AppSettings; onComplete: (sett
             </select>
           </Field>
         </Panel>
-        <Panel title="Paste and Privacy" description="Paste is local. Private mode disables cloud providers and history writes.">
+        <Panel title="Paste and Privacy" description="Private mode disables cloud providers and history writes.">
           <Field label="Output mode">
-            <select value={settings.pasteMode} onChange={(e) => update('pasteMode', e.target.value as AppSettings['pasteMode'])}>
+            <select className="input-field" value={settings.pasteMode} onChange={(e) => update('pasteMode', e.target.value as AppSettings['pasteMode'])}>
               <option value="auto-paste">Auto-paste into active window</option>
               <option value="confirm">Confirm text before pasting</option>
               <option value="copy-only">Copy to clipboard only</option>
             </select>
           </Field>
-          <Toggle label="Use local-only privacy mode" checked={settings.privacyMode} onChange={(checked) => update('privacyMode', checked)} />
+          <Toggle label="Use local-only private mode" checked={settings.privacyMode} onChange={(checked) => update('privacyMode', checked)} />
           <Toggle label="Disable auto-paste while private" checked={settings.disableAutoPasteInPrivacyMode} onChange={(checked) => update('disableAutoPasteInPrivacyMode', checked)} />
         </Panel>
-        <Panel title="Microphone and Paste Test" description="Run diagnostics, then use the dictation hotkey in any text field to confirm recording and paste.">
-          <button className="secondary-button compact w-max" onClick={runDiagnostics}>Run diagnostics</button>
+        <Panel title="Readiness" description="Run a quick check to ensure the helper and microphone are ready.">
+          <button className="secondary-button compact w-full" onClick={runDiagnostics}>RUN DIAGNOSTICS</button>
           {diagnostics && <DiagnosticsGrid diagnostics={diagnostics} />}
         </Panel>
       </div>

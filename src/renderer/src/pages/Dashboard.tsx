@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IPC, RecordingState, AppSettings, DEFAULT_SETTINGS, LastAudioSnapshot } from '../../../shared/types'
+import { IPC, RecordingState, AppSettings, LastAudioSnapshot } from '../../../shared/types'
 import { useIpcOn } from '../hooks/useIpc'
 import { Waveform } from '../components/Waveform'
 
@@ -26,12 +26,12 @@ const STATUS_TEXT: Record<RecordingState, { label: string; detail: string }> = {
   }
 }
 
-export function Dashboard(): JSX.Element {
+export function Dashboard({ settings: initialSettings }: { settings: AppSettings }): JSX.Element {
   const [state, setState] = useState<RecordingState>('idle')
   const [rawText, setRawText] = useState('')
   const [finalText, setFinalText] = useState('')
   const [error, setError] = useState('')
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
+  const [settings, setSettings] = useState<AppSettings>(initialSettings)
   const [nativeStatus, setNativeStatus] = useState<'ready' | 'error' | 'starting'>('starting')
   const [copied, setCopied] = useState(false)
   const [lastAudio, setLastAudio] = useState<LastAudioSnapshot>({ exists: false })
@@ -46,7 +46,10 @@ export function Dashboard(): JSX.Element {
   }
 
   useEffect(() => {
-    window.voxflow.getSettings().then(setSettings)
+    setSettings(initialSettings)
+  }, [initialSettings])
+
+  useEffect(() => {
     window.voxflow.getNativeStatus().then(setNativeStatus)
     refreshLastAudio()
   }, [])
@@ -93,210 +96,201 @@ export function Dashboard(): JSX.Element {
   }
 
   return (
-    <section className="capture-shell">
-      <div className="capture-grid">
-        <div className="capture-primary">
-          <div className="capture-header">
-            <div>
-              <div className="eyebrow">Capture console</div>
-              <h1>Speak once. Paste clean text.</h1>
-              <p>VoxFlow listens only while your hotkey is held, then prepares text for the focused Windows app.</p>
+    <section className="p-8 animate-reveal">
+      <div className="grid grid-cols-[1fr_300px] gap-8 max-xl:grid-cols-1">
+        <div className="space-y-8">
+          <header className="flex items-start justify-between gap-6">
+            <div className="space-y-4">
+              <div className="label-mono opacity-60">Capture console</div>
+              <h1 className="heading-xl">Speak once.<br />Paste clean text.</h1>
+              <p className="max-w-xl text-[var(--text-secondary)] leading-relaxed">
+                VoxFlow listens only while your hotkey is held, then prepares text for the focused Windows app.
+              </p>
             </div>
             <NativeStatusBadge status={nativeStatus} />
-          </div>
+          </header>
 
           {nativeStatus === 'ready' && (
-            <>
+            <div className="space-y-4">
               {settings.asrProvider === 'local-parakeet' && !lastAudio.exists && (
-                <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex gap-3 items-start animate-in fade-in slide-in-from-top-2">
-                  <div className="mt-1 text-amber-400">⚠️</div>
-                  <div className="text-xs text-amber-200/70 leading-relaxed">
-                    <strong className="block text-amber-300 mb-0.5">Local Parakeet files missing</strong>
-                    Ensure the model files are in the <code>src/native/models</code> directory. Check Settings &gt; Diagnostics for details.
+                <div className="p-4 panel-base border-[var(--color-success)]/20 bg-[var(--color-success)]/5 flex gap-4 items-start animate-reveal">
+                  <div className="text-[var(--color-success)]">⚠️</div>
+                  <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    <strong className="block text-[var(--text-primary)] mb-1">Local Parakeet files missing</strong>
+                    Ensure the model files are in the <code>src/native/models</code> directory.
                   </div>
                 </div>
               )}
               {settings.asrProvider === 'local-whisper' && !lastAudio.exists && (
-                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex gap-3 items-start animate-in fade-in slide-in-from-top-2">
-                  <div className="mt-1 text-blue-400">ℹ️</div>
-                  <div className="text-xs text-blue-200/70 leading-relaxed">
-                    <strong className="block text-blue-300 mb-0.5">First-run Model Download</strong>
-                    Local Whisper will download the <code>{settings.localAsrModel}</code> model on your first capture (~1GB). Ensure you have internet access.
+                <div className="p-4 panel-base border-blue-500/20 bg-blue-500/5 flex gap-4 items-start animate-reveal">
+                  <div className="text-blue-400">ℹ️</div>
+                  <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    <strong className="block text-[var(--text-primary)] mb-1">First-run Model Download</strong>
+                    Local Whisper will download <code>{settings.localAsrModel}</code> on your first capture (~1GB).
                   </div>
                 </div>
               )}
-            </>
+            </div>
           )}
 
-          <div className={`capture-stage state-${state}`}>
-            <div className="stage-topline">
+          <div className="capture-stage min-h-[400px] flex flex-col p-8">
+            <div className="flex items-center gap-4 mb-auto">
               <div className={`record-orb ${state}`} />
               <div>
-                <div className="stage-state">{STATUS_TEXT[state].label}</div>
-                <div className="stage-detail">{STATUS_TEXT[state].detail}</div>
+                <div className="text-sm font-bold">{STATUS_TEXT[state].label}</div>
+                <div className="text-xs text-[var(--text-secondary)]">{STATUS_TEXT[state].detail}</div>
               </div>
             </div>
 
-            <div className="stage-body">
+            <div className="flex-1 flex items-center justify-center">
               {state === 'idle' && (
-                <div className="idle-composition">
-                  <div className="listening-ring">
-                    <div />
-                    <div />
-                    <div />
+                <div className="text-center space-y-6 animate-reveal">
+                  <div className="flex items-center justify-center gap-2 h-12">
+                    <div className="w-1 h-4 bg-[var(--bg-accent)] rounded-full" />
+                    <div className="w-1 h-8 bg-[var(--bg-accent)] rounded-full" />
+                    <div className="w-1 h-4 bg-[var(--bg-accent)] rounded-full" />
                   </div>
-                  <div>
-                    <p className="text-sm text-stone-400">Dictation</p>
-                    <kbd>{settings.dictateHotkey}</kbd>
+                  <div className="space-y-2">
+                    <div className="label-mono opacity-40">Dictation</div>
+                    <kbd className="px-3 py-1.5 panel-base label-mono text-[var(--text-primary)]">{settings.dictateHotkey}</kbd>
                   </div>
                 </div>
               )}
 
               {state === 'recording' && (
-                <div className="recording-composition">
+                <div className="text-center space-y-4 animate-reveal">
                   <Waveform />
-                  <p>Recording audio locally before transcription.</p>
+                  <p className="text-sm text-[var(--text-secondary)]">Capturing audio...</p>
                 </div>
               )}
 
               {state === 'processing' && (
-                <div className="processing-composition">
-                  <div className="pipeline-loader">
-                    <span />
-                    <span />
-                    <span />
+                <div className="text-center space-y-6 animate-reveal max-w-md">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <div className="w-8 h-1 bg-[var(--bg-accent)] rounded-full overflow-hidden">
+                      <div className="w-full h-full bg-[var(--color-success)] animate-pulse" />
+                    </div>
+                    <div className="w-8 h-1 bg-[var(--bg-accent)] rounded-full overflow-hidden">
+                      <div className="w-full h-full bg-[var(--color-success)] animate-pulse delay-75" />
+                    </div>
+                    <div className="w-8 h-1 bg-[var(--bg-accent)] rounded-full overflow-hidden">
+                      <div className="w-full h-full bg-[var(--color-success)] animate-pulse delay-150" />
+                    </div>
                   </div>
-                  <p>{rawText || 'Waiting for first transcript tokens.'}</p>
+                  <p className="text-sm italic text-[var(--text-primary)] leading-relaxed">
+                    {rawText || 'Analyzing signal...'}
+                  </p>
                 </div>
               )}
 
               {state === 'done' && finalText && (
-                <div className="result-composition">
-                  <p>{finalText}</p>
-                  <button onClick={handleCopy} className="secondary-button compact">{copied ? 'Copied' : 'Copy'}</button>
+                <div className="panel-base p-6 space-y-4 animate-reveal max-w-lg w-full">
+                  <p className="text-[var(--text-primary)] leading-relaxed">{finalText}</p>
+                  <button onClick={handleCopy} className="secondary-button w-full">
+                    {copied ? '✓ Copied' : 'Copy to clipboard'}
+                  </button>
                 </div>
               )}
 
               {state === 'error' && (
-                <div className="error-composition">
-                  <strong>Capture could not finish</strong>
-                  <p>{error || 'Check Python, microphone access, and provider settings.'}</p>
+                <div className="panel-base border-[var(--color-error)]/30 bg-[var(--color-error)]/5 p-6 space-y-2 animate-reveal text-center max-w-sm">
+                  <div className="text-[var(--color-error)] font-bold">Capture failed</div>
+                  <p className="text-xs text-[var(--text-secondary)]">{error || 'Unknown error occurred.'}</p>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <aside className="capture-secondary">
-          <div className="metric-stack">
-            <div className="metric-row">
-              <span>Mode</span>
-              <strong>{settings.llmProvider === 'none' ? 'Raw ASR' : settings.rewriteStyle}</strong>
-            </div>
-            <div className="metric-row">
-              <span>ASR</span>
-              <strong>{settings.asrProvider}</strong>
-            </div>
-            <div className="metric-row">
-              <span>Translate</span>
-              <strong>{settings.translateHotkey}</strong>
-            </div>
-            <div className="metric-row">
-              <span>Paste</span>
-              <strong>
-                {settings.privacyMode
-                  ? 'Private'
-                  : settings.pasteMode === 'auto-paste'
-                    ? 'Auto'
-                    : settings.pasteMode === 'confirm'
-                      ? 'Confirm'
-                      : 'Copy only'}
-              </strong>
-            </div>
-            <div className="metric-row">
-              <span>Profiles</span>
-              <strong>{settings.appProfiles.filter((profile) => profile.enabled).length} active</strong>
+        <aside className="space-y-6">
+          <div className="panel-base p-6 space-y-4">
+            <div className="label-mono opacity-60">Metrics</div>
+            <div className="space-y-4">
+              <MetricRow label="Mode" value={settings.llmProvider === 'none' ? 'Raw ASR' : settings.rewriteStyle} />
+              <MetricRow label="ASR" value={settings.asrProvider} />
+              <MetricRow label="Paste" value={settings.privacyMode ? 'Private' : settings.pasteMode} />
             </div>
           </div>
 
-          <div className="mini-command-bar">
-            <button className={settings.privacyMode ? 'active' : ''}>Private</button>
-            <button className={settings.commandMode ? 'active' : ''}>Commands</button>
-            <button className={settings.keepLastAudio ? 'active' : ''}>Replay</button>
+          <div className="panel-base p-2 flex gap-1">
+            <button className={`flex-1 py-2 text-[10px] font-bold rounded-md transition-colors ${settings.privacyMode ? 'bg-[var(--bg-accent)] text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}>PRIVATE</button>
+            <button className={`flex-1 py-2 text-[10px] font-bold rounded-md transition-colors ${settings.commandMode ? 'bg-[var(--bg-accent)] text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}>COMMANDS</button>
+            <button className={`flex-1 py-2 text-[10px] font-bold rounded-md transition-colors ${settings.keepLastAudio ? 'bg-[var(--bg-accent)] text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}>REPLAY</button>
           </div>
 
-          <div className="transcript-panel">
-            <div className="panel-label">Transcript preview</div>
+          <div className="panel-base p-6 space-y-4">
+            <div className="label-mono opacity-60">Transcript preview</div>
             {rawText || finalText ? (
-              <div className="grid gap-4">
+              <div className="space-y-4">
                 {rawText && (
-                  <div>
-                    <span>Raw</span>
-                    <p>{rawText}</p>
+                  <div className="space-y-1">
+                    <div className="label-mono text-[9px] opacity-40">Raw</div>
+                    <p className="text-xs text-[var(--text-secondary)] line-clamp-4">{rawText}</p>
                   </div>
                 )}
                 {finalText && rawText !== finalText && (
-                  <div>
-                    <span>Final</span>
-                    <p>{finalText}</p>
+                  <div className="space-y-1">
+                    <div className="label-mono text-[9px] opacity-40">Final</div>
+                    <p className="text-xs text-[var(--text-primary)] line-clamp-4">{finalText}</p>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="mini-empty">
-                <div className="mini-empty-bars">
-                  <i />
-                  <i />
-                  <i />
+              <div className="space-y-4 py-4 opacity-20">
+                <div className="space-y-2">
+                  <div className="h-2 w-full bg-[var(--bg-accent)] rounded-full" />
+                  <div className="h-2 w-2/3 bg-[var(--bg-accent)] rounded-full" />
                 </div>
-                <p>Completed captures will preview here before they enter history.</p>
+                <p className="text-[10px] font-medium leading-relaxed">Captures will preview here before entry.</p>
               </div>
             )}
           </div>
 
-          <div className="transcript-panel">
-            <div className="panel-label">Last audio</div>
-            {lastAudio.exists && lastAudio.audioBase64 ? (
-              <div className="audio-retry">
+          {lastAudio.exists && lastAudio.audioBase64 && (
+            <div className="panel-base p-6 space-y-4">
+              <div className="label-mono opacity-60">Last session</div>
+              <div className="space-y-4">
                 <audio
                   key={lastAudio.recordedAt ?? lastAudio.audioBase64.length}
                   controls
-                  preload="metadata"
+                  className="w-full h-8 opacity-60 grayscale invert"
                   src={`data:audio/wav;base64,${lastAudio.audioBase64}`}
-                  onCanPlay={() => setPlaybackError('')}
-                  onError={() => setPlaybackError('Playback failed. Record again or restart VoxFlow so the updated media policy loads.')}
                 />
-                <div className="metric-row">
-                  <span>{lastAudio.mode}</span>
-                  <strong>{lastAudio.duration?.toFixed(1)}s</strong>
-                </div>
-                {playbackError && <p className="text-sm text-red-300">{playbackError}</p>}
-                <button className="secondary-button compact" onClick={retryLastAudio}>{retrying ? 'Retrying' : 'Retry pipeline'}</button>
-                {retryError && <p className="text-sm text-red-300">{retryError}</p>}
+                <button 
+                  className="secondary-button w-full text-xs py-2" 
+                  onClick={retryLastAudio}
+                >
+                  {retrying ? 'Retrying...' : 'Re-run pipeline'}
+                </button>
               </div>
-            ) : (
-              <div className="mini-empty">
-                <div className="mini-empty-bars">
-                  <i />
-                  <i />
-                </div>
-                <p>Enable last-audio retention in Settings, then record once to replay or retry.</p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </aside>
       </div>
     </section>
   )
 }
 
-function NativeStatusBadge(props: { status: 'ready' | 'error' | 'starting' }): JSX.Element {
+function MetricRow({ label, value }: { label: string; value: string }): JSX.Element {
   return (
-    <div className={`native-badge ${props.status}`}>
-      <span />
-      {props.status === 'ready' && 'Helper ready'}
-      {props.status === 'starting' && 'Starting helper'}
-      {props.status === 'error' && 'Helper error'}
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-wider">{label}</span>
+      <span className="label-mono text-[var(--text-primary)] truncate max-w-[120px]">{value}</span>
+    </div>
+  )
+}
+
+function NativeStatusBadge({ status }: { status: 'ready' | 'error' | 'starting' }): JSX.Element {
+  const colors = {
+    ready: 'bg-[var(--color-success)]',
+    starting: 'bg-amber-400',
+    error: 'bg-[var(--color-error)]'
+  }
+  
+  return (
+    <div className="flex items-center gap-2.5 px-3 py-1.5 panel-base bg-[var(--bg-secondary)] border-[var(--border-subtle)]">
+      <div className={`w-1.5 h-1.5 rounded-full ${colors[status]}`} />
+      <span className="label-mono text-[9px] opacity-80">{status}</span>
     </div>
   )
 }
