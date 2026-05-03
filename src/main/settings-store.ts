@@ -21,64 +21,25 @@ export function saveSettings(settings: AppSettings): void {
 }
 
 function normalizeSettings(settings: AppSettings): AppSettings {
-  const oldSettings = settings as unknown as Record<string, unknown>
   const normalized: AppSettings = {
+    ...DEFAULT_SETTINGS,
     ...settings,
-    appProfiles: Array.isArray(settings.appProfiles) ? settings.appProfiles : DEFAULT_SETTINGS.appProfiles,
-    privacyMode: Boolean(settings.privacyMode),
-    disableAutoPasteInPrivacyMode: Boolean(settings.disableAutoPasteInPrivacyMode),
-    keepLastAudio: settings.keepLastAudio !== false,
-    commandMode: settings.commandMode !== false,
-    onboardingCompleted: Boolean(settings.onboardingCompleted),
-    localLlmModel: settings.localLlmModel?.trim() || DEFAULT_SETTINGS.localLlmModel,
-    localLlmEndpoint: settings.localLlmEndpoint?.trim() || DEFAULT_SETTINGS.localLlmEndpoint,
-    offlineFallback: settings.offlineFallback !== false,
-    undoHotkey: settings.undoHotkey || DEFAULT_SETTINGS.undoHotkey,
-    personalDictionary: settings.personalDictionary || DEFAULT_SETTINGS.personalDictionary
+    appProfiles: (settings.appProfiles || DEFAULT_SETTINGS.appProfiles).map((p) => ({
+      ...DEFAULT_SETTINGS.appProfiles[0], // fallback to first default profile for shape
+      ...p,
+      pasteMode: p.pasteMode ?? ((p as any).autoPaste === false ? 'copy-only' : 'auto-paste'),
+      llmModel: p.llmModel?.replace('-v1', '-v1.5') ?? p.llmModel
+    }))
   }
 
-  // Migrate autoPaste to pasteMode
-  if (normalized.pasteMode === undefined) {
-    if (oldSettings.autoPaste === false) {
-      normalized.pasteMode = 'copy-only'
-    } else {
-      normalized.pasteMode = 'auto-paste'
-    }
-  }
-
-  if (normalized.llmProvider === 'nvidia-nim' && normalized.llmModel === 'nvidia/llama-3.3-nemotron-super-49b-v1') {
-    normalized.llmModel = 'nvidia/llama-3.3-nemotron-super-49b-v1.5'
-  }
-
-  normalized.appProfiles = normalized.appProfiles.map((profile) => {
-    const oldProfile = profile as unknown as Record<string, unknown>
-    const p = {
-      ...profile,
-      localLlmModel: profile.localLlmModel?.trim() || normalized.localLlmModel,
-      localLlmEndpoint: profile.localLlmEndpoint?.trim() || normalized.localLlmEndpoint,
-      offlineFallback: profile.offlineFallback !== false,
-      llmModel: profile.llmModel === 'nvidia/llama-3.3-nemotron-super-49b-v1'
-        ? 'nvidia/llama-3.3-nemotron-super-49b-v1.5'
-        : profile.llmModel
-    }
-
-    if (p.pasteMode === undefined) {
-      if (oldProfile.autoPaste === false) {
-        p.pasteMode = 'copy-only'
-      } else {
-        p.pasteMode = 'auto-paste'
-      }
-    }
-    return p
-  })
+  // Global migrations
+  normalized.pasteMode = normalized.pasteMode ?? ((settings as any).autoPaste === false ? 'copy-only' : 'auto-paste')
+  normalized.llmModel = normalized.llmModel?.replace('-v1', '-v1.5')
 
   if (normalized.privacyMode) {
-    return {
-      ...normalized,
-      asrProvider: 'local-whisper',
-      llmProvider: normalized.llmProvider === 'local-llm' ? 'local-llm' : 'none',
-      pasteMode: normalized.disableAutoPasteInPrivacyMode ? 'copy-only' : normalized.pasteMode
-    }
+    normalized.asrProvider = 'local-whisper'
+    normalized.llmProvider = normalized.llmProvider === 'local-llm' ? 'local-llm' : 'none'
+    normalized.pasteMode = normalized.disableAutoPasteInPrivacyMode ? 'copy-only' : normalized.pasteMode
   }
 
   return normalized
