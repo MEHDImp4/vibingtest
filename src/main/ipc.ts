@@ -8,7 +8,8 @@ export function registerIpcHandlers(
   getNativeStatus?: () => 'ready' | 'error' | 'starting',
   getLastAudio?: () => LastAudioSnapshot,
   retryLastAudio?: () => Promise<{ ok: boolean; error?: string }>,
-  getDiagnostics?: () => Promise<Record<string, unknown>>
+  getDiagnostics?: () => Promise<Record<string, unknown>>,
+  getAudioDevices?: () => Promise<Array<{ id: number | string; name: string }>>
 ): void {
   ipcMain.handle(IPC.SETTINGS_GET, () => loadSettings())
 
@@ -44,6 +45,8 @@ export function registerIpcHandlers(
   ipcMain.handle(IPC.LAST_AUDIO_RETRY, () => retryLastAudio?.() ?? { ok: false, error: 'No retry handler registered' })
 
   ipcMain.handle(IPC.DIAGNOSTICS_GET, () => getDiagnostics?.() ?? {})
+
+  ipcMain.handle(IPC.AUDIO_DEVICES_GET, () => getAudioDevices?.() ?? [])
 
   ipcMain.on(IPC.OPEN_SETTINGS, () => {
     BrowserWindow.getAllWindows().forEach((w) => {

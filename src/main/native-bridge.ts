@@ -26,7 +26,8 @@ export class NativeBridge {
         ...process.env,
         DICTATE_HOTKEY: settings.dictateHotkey,
         TRANSLATE_HOTKEY: settings.translateHotkey,
-        UNDO_HOTKEY: settings.undoHotkey
+        UNDO_HOTKEY: settings.undoHotkey,
+        MICROPHONE_DEVICE: settings.microphoneDevice
       },
       stdio: ['pipe', 'pipe', 'pipe']
     })
@@ -75,8 +76,13 @@ export class NativeBridge {
       cmd: 'update_hotkeys',
       dictate_hotkey: settings.dictateHotkey,
       translate_hotkey: settings.translateHotkey,
-      undo_hotkey: settings.undoHotkey
+      undo_hotkey: settings.undoHotkey,
+      microphone_device: settings.microphoneDevice
     })
+  }
+
+  listDevices(): void {
+    this.send({ cmd: 'list_devices' })
   }
 
   undo(): void {

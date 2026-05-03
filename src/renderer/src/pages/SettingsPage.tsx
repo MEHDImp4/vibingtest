@@ -39,6 +39,7 @@ export function SettingsPage({
 }): JSX.Element {
   const [settings, setSettings] = useState<AppSettings>(initialSettings)
   const [version, setVersion] = useState('')
+  const [devices, setDevices] = useState<Array<{ id: number | string; name: string }>>([])
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -53,6 +54,8 @@ export function SettingsPage({
       .then(setVersion)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false))
+
+    window.voxflow.getAudioDevices().then(setDevices).catch(console.error)
   }, [])
 
   // Sync internal state with props if they change
@@ -245,6 +248,19 @@ export function SettingsPage({
             </Panel>
 
             <Panel title="Speech Processing" description="Choose how audio is converted to text.">
+              <Field label="Microphone Input" hint="Select the device to record from.">
+                <select
+                  value={settings.microphoneDevice}
+                  onChange={(e) => update('microphoneDevice', e.target.value)}
+                >
+                  <option value="default">System Default</option>
+                  {devices.map((d) => (
+                    <option key={d.id} value={String(d.id)}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
               <Field label="ASR Provider">
                 <select value={settings.asrProvider} onChange={(e) => update('asrProvider', e.target.value as AppSettings['asrProvider'])}>
                   <option value="local-whisper">OpenAI Whisper (Local, Offline)</option>

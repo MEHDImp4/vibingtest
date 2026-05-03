@@ -42,6 +42,7 @@ let lastDiagnostics: Partial<PipelineDiagnostics> = {
   lastPasteStatus: 'skipped'
 }
 let pendingPaste: string | null = null
+let deviceListResolver: ((devices: any[]) => void) | null = null
 
 function lastAudioPath(): string {
   return path.join(app.getPath('userData'), 'last-recording.wav')
@@ -419,7 +420,19 @@ app.whenReady().then(() => {
     () => nativeStatus,
     getLastAudioSnapshot,
     retryLastAudio,
-    getDiagnostics
+    getDiagnostics,
+    async () => {
+      return new Promise((resolve) => {
+        deviceListResolver = resolve
+        bridge.listDevices()
+        setTimeout(() => {
+          if (deviceListResolver) {
+            deviceListResolver([])
+            deviceListResolver = null
+          }
+        }, 3000)
+      })
+    }
   )
 
   // Registered handlers already in registerIpcHandlers above
@@ -552,6 +565,12 @@ app.whenReady().then(() => {
       case 'hotkey_undo':
         console.log('[native] undo requested')
         bridge.undo()
+        break
+      case 'audio_devices':
+        if (deviceListResolver) {
+          deviceListResolver(event.devices || [])
+          deviceListResolver = null
+        }
         break
       case 'log':
         console.log(`[native:${event.level ?? 'info'}]`, event.message)

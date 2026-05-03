@@ -57,6 +57,7 @@ export interface AppSettings {
   localAsrModel: string
   localLlmModel: string
   localLlmEndpoint: string
+  microphoneDevice: string // Selected microphone device ID or name
   offlineFallback: boolean
   privacyMode: boolean
   disableAutoPasteInPrivacyMode: boolean
@@ -97,6 +98,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   localAsrModel: 'turbo',
   localLlmModel: 'llama3.2:1b',
   localLlmEndpoint: 'http://127.0.0.1:11434',
+  microphoneDevice: 'default',
   offlineFallback: true,
   privacyMode: false,
   disableAutoPasteInPrivacyMode: false,
@@ -208,6 +210,7 @@ export interface VoxflowApi {
   minimizeWindow: () => Promise<{ ok: boolean }>
   testMicrophone: () => Promise<{ ok: boolean }>
   testPaste: () => Promise<{ ok: boolean }>
+  getAudioDevices: () => Promise<Array<{ id: number | string; name: string }>>
   confirmPaste: () => Promise<{ ok: boolean }>
   checkForUpdates: () => Promise<void>
   getVersion: () => Promise<string>
@@ -244,6 +247,7 @@ export const IPC = {
   DIAGNOSTICS_GET: 'diagnostics:get',
   WINDOW_CLOSE: 'window:close',
   WINDOW_MINIMIZE: 'window:minimize',
+  AUDIO_DEVICES_GET: 'audio:devices:get',
 
   // Feature expansion
   TEST_MICROPHONE: 'test:microphone',
@@ -258,7 +262,7 @@ export const IPC = {
 // ─── Native helper messages ───────────────────────────────────────────────────
 
 export interface NativeEvent {
-  event: 'ready' | 'hotkey_down' | 'hotkey_up' | 'hotkey_undo' | 'error' | 'log'
+  event: 'ready' | 'hotkey_down' | 'hotkey_up' | 'hotkey_undo' | 'error' | 'log' | 'audio_devices'
   hotkey?: string
   mode?: RecordingMode
   audio_path?: string
@@ -266,12 +270,14 @@ export interface NativeEvent {
   message?: string
   level?: 'info' | 'warn' | 'error'
   app_name?: string
+  devices?: Array<{ id: number | string; name: string }>
 }
 
 export interface NativeCommand {
-  cmd: 'update_hotkeys' | 'paste' | 'undo' | 'shutdown'
+  cmd: 'update_hotkeys' | 'paste' | 'undo' | 'shutdown' | 'list_devices'
   dictate_hotkey?: string
   translate_hotkey?: string
   undo_hotkey?: string
+  microphone_device?: string
   text?: string
 }

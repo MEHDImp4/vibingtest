@@ -35,6 +35,7 @@ const api: VoxflowApi = {
   minimizeWindow: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.WINDOW_MINIMIZE),
   testMicrophone: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.TEST_MICROPHONE),
   testPaste: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.TEST_PASTE),
+  getAudioDevices: (): Promise<Array<{ id: number | string; name: string }>> => ipcRenderer.invoke(IPC.AUDIO_DEVICES_GET),
   confirmPaste: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.PASTE_CONFIRM),
   checkForUpdates: (): Promise<void> => ipcRenderer.invoke(IPC.CHECK_FOR_UPDATES),
   getVersion: (): Promise<string> => ipcRenderer.invoke(IPC.APP_VERSION),

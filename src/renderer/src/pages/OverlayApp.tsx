@@ -29,45 +29,38 @@ export function OverlayApp(): JSX.Element {
   }
 
   return (
-    <div className="grid h-[120px] place-items-center bg-transparent px-6">
-      <div className={`overlay-shell w-full transition-all duration-500 ${state === 'idle' ? 'opacity-40 scale-95 grayscale' : 'opacity-100 scale-100'}`}>
+    <div className="grid h-[120px] place-items-center bg-transparent px-6 overflow-hidden">
+      <div className={`w-full panel-glass px-6 py-4 shadow-2xl transition-all duration-500 ${state === 'idle' ? 'opacity-0 scale-95 translate-y-4' : 'opacity-100 scale-100 translate-y-0'}`}>
         <div className="flex items-center justify-between gap-6">
           <div className="flex min-w-0 items-center gap-4">
-            <div className={`relative flex h-3 w-3 shrink-0 items-center justify-center`}>
-               <div className={`absolute inset-0 rounded-full bg-emerald-500 opacity-20 ${state === 'recording' ? 'animate-ping' : ''}`} />
-               <div className={`h-2 w-2 rounded-full transition-colors duration-300 ${
-                 state === 'recording' ? 'bg-emerald-500' : 
-                 state === 'processing' ? 'bg-amber-400 animate-pulse' :
-                 state === 'error' ? 'bg-rose-500' : 'bg-stone-600'
-               }`} />
-            </div>
+            <div className={`record-orb ${state} w-2.5 h-2.5 shrink-0`} />
             
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline gap-2">
-                <span className="text-xs font-bold uppercase tracking-widest text-emerald-500/80">
+                <span className="label-mono text-[10px] opacity-60">
                   {state === 'recording' ? 'Live' : state === 'processing' ? 'Thinking' : 'VoxFlow'}
                 </span>
-                <span className="truncate text-sm font-medium text-stone-200">
-                  {state === 'recording' && 'Listening to your voice...'}
-                  {state === 'processing' && 'Polishing your words...'}
-                  {state === 'done' && (finalText ? 'Ready to paste' : 'Text processed')}
-                  {state === 'error' && 'Something went wrong'}
-                  {state === 'idle' && 'Ready for dictation'}
+                <span className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                  {state === 'recording' && 'Listening...'}
+                  {state === 'processing' && 'Processing...'}
+                  {state === 'done' && (finalText ? 'Ready' : 'Done')}
+                  {state === 'error' && 'Error'}
+                  {state === 'idle' && 'Standby'}
                 </span>
               </div>
               
               {(state === 'done' || state === 'error') && (
-                <div className="mt-1.5 truncate text-[11px] leading-relaxed text-stone-500">
+                <div className="mt-1 truncate text-[11px] text-[var(--text-secondary)] leading-relaxed">
                   {state === 'done' && (finalText || 'Transcription complete.')}
-                  {state === 'error' && (error || 'Connection or model error.')}
+                  {state === 'error' && (error || 'Pipeline error.')}
                 </div>
               )}
             </div>
           </div>
 
           {state === 'done' && settings?.pasteMode === 'confirm' && (
-            <button className="primary-button compact text-[11px] uppercase tracking-wider" onClick={confirm}>
-              Paste Now
+            <button className="primary-button compact text-[10px]" onClick={confirm}>
+              PASTE
             </button>
           )}
         </div>

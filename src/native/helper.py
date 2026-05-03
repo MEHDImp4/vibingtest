@@ -120,6 +120,26 @@ class Recorder:
         self.frames: list[np.ndarray] = []
         self.started_at = 0.0
         self.lock = threading.Lock()
+        self.device_id: Optional[int] = None
+
+    def set_device(self, device_name_or_id: str) -> None:
+        with self.lock:
+            if device_name_or_id == "default":
+                self.device_id = None
+                return
+
+            try:
+                # Try as integer ID first
+                self.device_id = int(device_name_or_id)
+            except ValueError:
+                # Try as name
+                devices = sd.query_devices()
+                for i, d in enumerate(devices):
+                    if d['max_input_channels'] > 0 and device_name_or_id in d['name']:
+                        self.device_id = i
+                        return
+                JsonOut.log(f"device not found by name: {device_name_or_id}, using default", "warn")
+                self.device_id = None
 
     def start(self) -> None:
         with self.lock:
@@ -127,13 +147,18 @@ class Recorder:
                 return
             self.frames = []
             self.started_at = time.perf_counter()
-            self.stream = sd.InputStream(
-                samplerate=SAMPLE_RATE,
-                channels=CHANNELS,
-                dtype="int16",
-                callback=self._on_audio,
-            )
-            self.stream.start()
+            try:
+                self.stream = sd.InputStream(
+                    samplerate=SAMPLE_RATE,
+                    channels=CHANNELS,
+                    dtype="int16",
+                    device=self.device_id,
+                    callback=self._on_audio,
+                )
+                self.stream.start()
+            except Exception as exc:
+                JsonOut.error(f"failed to start audio stream: {exc}")
+                self.stream = None
 
     def stop(self) -> tuple[str, float]:
         with self.lock:
@@ -171,6 +196,11 @@ class Helper:
         self.pressed: set[str] = set()
         self.active_mode: Optional[str] = None
         self.recorder = Recorder()
+        
+        microphone_device = os.environ.get("MICROPHONE_DEVICE")
+        if microphone_device:
+            self.recorder.set_device(microphone_device)
+
         self.commands: queue.Queue[dict] = queue.Queue()
         self.stop_event = threading.Event()
 
@@ -206,8 +236,20 @@ class Helper:
                 translate=command.get("translate_hotkey") or self.config.translate,
                 undo=command.get("undo_hotkey") or self.config.undo,
             )
+            if "microphone_device" in command:
+                self.recorder.set_device(command["microphone_device"])
             self.pressed.clear()
             JsonOut.log(f"hotkeys updated: dictate={self.config.dictate}, translate={self.config.translate}, undo={self.config.undo}")
+        elif cmd == "list_devices":
+            try:
+                devices = sd.query_devices()
+                input_devices = []
+                for i, d in enumerate(devices):
+                    if d['max_input_channels'] > 0:
+                        input_devices.append({"id": i, "name": d['name']})
+                JsonOut.emit({"event": "audio_devices", "devices": input_devices})
+            except Exception as exc:
+                JsonOut.error(f"failed to list audio devices: {exc}")
         elif cmd == "paste":
             # Small delay to let modifiers clear and target app focus stabilize
             time.sleep(0.1)
