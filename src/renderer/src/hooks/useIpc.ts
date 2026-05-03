@@ -5,5 +5,5 @@ export function useIpcOn(channel: RendererEventChannel, cb: (...args: unknown[])
   useEffect(() => {
     const off = window.voxflow.on(channel, cb)
     return off
-  }, [channel])
+  }, [channel, cb])
 }

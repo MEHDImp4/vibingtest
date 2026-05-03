@@ -39,7 +39,7 @@ export function HistoryPage(): JSX.Element {
 
   const remove = async (id: string): Promise<void> => {
     await window.voxflow.deleteEntry(id)
-    setHistory((items) => items.filter((item) => item.id !== id))
+    await refresh()
   }
 
   return (

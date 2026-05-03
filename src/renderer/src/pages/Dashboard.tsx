@@ -203,7 +203,15 @@ export function Dashboard(): JSX.Element {
             </div>
             <div className="metric-row">
               <span>Paste</span>
-              <strong>{settings.privacyMode ? 'Private' : settings.autoPaste ? 'Auto' : 'Manual'}</strong>
+              <strong>
+                {settings.privacyMode
+                  ? 'Private'
+                  : settings.pasteMode === 'auto-paste'
+                    ? 'Auto'
+                    : settings.pasteMode === 'confirm'
+                      ? 'Confirm'
+                      : 'Copy only'}
+              </strong>
             </div>
             <div className="metric-row">
               <span>Profiles</span>

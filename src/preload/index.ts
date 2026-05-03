@@ -7,7 +7,8 @@ const validEventChannels = [
   IPC.TRANSCRIPTION_FINAL,
   IPC.TRANSCRIPTION_ERROR,
   IPC.LAST_AUDIO_UPDATED,
-  IPC.NATIVE_STATUS
+  IPC.NATIVE_STATUS,
+  IPC.NATIVE_LOG
 ] satisfies RendererEventChannel[]
 
 // Expose a safe, typed API to the renderer
